@@ -85,7 +85,11 @@ class GSUMicro:
         self.gpio_output(self.micro.nss, 0)
         time.sleep(0.01)
         self.send_bootldr_cmd([], checksum=False, sof=True)
-        
+        self.get_bootldr_ack()
+
+        self.send_bootldr_cmd([0x44], sof=True)
+        self.get_bootldr_ack()
+        self.send_bootldr_cmd([0xFF, 0xFF])
         self.get_bootldr_ack()
 
         blocks = [binary[i:i+256] for i in range(0, len(binary), 256)]
