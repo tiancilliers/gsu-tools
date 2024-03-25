@@ -91,7 +91,9 @@ class GSUMicro:
 
         self.send_bootldr_cmd([0x44], sof=True)
         self.get_bootldr_ack()
-        self.send_bootldr_cmd([0xFF, 0xFF])
+        self.send_bootldr_cmd([0x00, 0x00])
+        self.get_bootldr_ack()
+        self.send_bootldr_cmd([0x00, 0x00])
         self.get_bootldr_ack()
 
         blocks = [binary[i:i+256] for i in range(0, len(binary), 256)]
