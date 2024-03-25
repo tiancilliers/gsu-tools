@@ -110,7 +110,7 @@ class GSUMicro:
             self.get_ack()
             self.send_cmd([address >> (24-i*8) & 0xFF for i in range(4)])
             self.get_ack()
-            self.send_cmd([0xFF] + list(block), verbose=False)
+            self.send_cmd([0xFF] + list(block), log=False)
             self.get_ack()
     
         self.send_cmd([0x21], sof=True)
