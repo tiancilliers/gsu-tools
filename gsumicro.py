@@ -57,16 +57,21 @@ class GSUMicro:
         self.reset()
         self.gpio_output(self.micro.boot, 0)
 
-    def send_cmd(self, cmd, checksum=True, sof=False, verbose=False):
+    def send_cmd(self, cmd, checksum=True, sof=False, verbose=False, slowfirst=False):
         self.gpio_output(self.micro.nss, 0, log=False)
         time.sleep(BYTE_TIME)
         if verbose:
             console.log(f"Sending bootloader command: {tohex(cmd)}")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + ([0xFF] if len(cmd) == 1 else []))] if checksum else [])
-        self.bus_xfer([data[0]], log=verbose)
-        time.sleep(0.001)
-        if len(data) > 1:
-            self.bus_xfer(data[1:], log=verbose)
+        if slowfirst:
+            self.bus_xfer([data[0]], log=verbose)
+            self.gpio_output(self.micro.nss, 1, log=False)
+            time.sleep(0.001)
+            self.gpio_output(self.micro.nss, 0, log=False)
+            if len(data) > 1:
+                self.bus_xfer(data[1:], log=verbose)
+        else:
+            self.bus_xfer(data, log=verbose)
         self.gpio_output(self.micro.nss, 1, log=False)
     
     def get_ack(self):
