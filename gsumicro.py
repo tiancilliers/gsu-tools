@@ -3,6 +3,7 @@ import RPi.GPIO as gpio
 import time
 from functools import reduce
 from rich.console import Console
+from rich import track
 console = Console()
 tohex = lambda list: '[' + ' '.join([f'{i:02X}' for i in list]) + ']'
 
@@ -16,6 +17,8 @@ EPSMicro = Microcontroller(nrst=38, boot=40, nss=35)
 OBCMicro = Microcontroller(nrst=11, boot=12, nss=36)
 MISC1Micro = Microcontroller(nrst=16, boot=18, nss=15)
 MISC2Micro = Microcontroller(nrst=37, boot=13, nss=22)
+
+BYTE_TIME = 0.00005
 
 class GSUMicro:
     def __init__(self, bus, micro):
@@ -32,7 +35,7 @@ class GSUMicro:
         orig = [b for b in data]
         ret = []
         for b in data:
-            time.sleep(0.00005)
+            time.sleep(BYTE_TIME)
             ret.append(self.bus.xfer([b])[0])
         if log:
             console.log(f"SPI >> {tohex(orig)} << {tohex(ret)}")
@@ -58,7 +61,7 @@ class GSUMicro:
         self.gpio_output(self.micro.boot, 0)
 
     def send_bootldr_cmd(self, cmd, checksum=True, sof=False, verbose=True):
-        time.sleep(0.01)
+        time.sleep(BYTE_TIME)
         if verbose:
             console.log(f"Sending bootloader command: {tohex(cmd)}")
         else:
@@ -67,11 +70,11 @@ class GSUMicro:
         self.bus_xfer(data, log=verbose)
     
     def get_bootldr_ack(self):
-        time.sleep(0.01)
-        self.bus_xfer([0x00])
+        time.sleep(BYTE_TIME)
+        self.bus_xfer([0x00], log=False)
         while (res := self.bus_xfer([0x00], log=False)[0]) not in [0x79, 0x1F]:
-            time.sleep(0.001)
-        self.bus_xfer([0x79])
+            time.sleep(BYTE_TIME)
+        self.bus_xfer([0x79], log=False)
         return res == 0x79
 
     def update_firmware(self, binary, base_address=0x08000000):
@@ -89,7 +92,7 @@ class GSUMicro:
         blocks[-1] += b'\xFF' * (256 - len(blocks[-1]))
         addresses = [base_address + i * 256 for i in range(len(blocks))]
 
-        for block, address in zip(blocks, addresses):
+        for block, address in track(zip(blocks, addresses)):
             self.send_bootldr_cmd([0x31], sof=True)
             if not self.get_bootldr_ack():
                 raise Exception("Bootloader returned NACK")
