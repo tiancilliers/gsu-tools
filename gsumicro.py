@@ -54,6 +54,7 @@ class GSUMicro:
         self.gpio_output(self.micro.boot, 0)
 
     def send_bootldr_cmd(self, cmd, checksum=True, sof=False):
+        time.sleep(0.1)
         console.log(f"Sending bootloader command: {tohex(cmd)}")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + [0xFF])] if checksum else [])
         self.bus_xfer(data)
@@ -74,7 +75,9 @@ class GSUMicro:
         
         self.gpio_output(self.micro.nss, 0)
         self.send_bootldr_cmd([], checksum=False, sof=True)
-        self.get_bootldr_ack()
+        
+        if not self.get_bootldr_ack():
+            raise Exception("Bootloader returned NACK")
 
         blocks = [binary[i:i+256] for i in range(0, len(binary), 256)]
         blocks[-1] += b'\xFF' * (256 - len(blocks[-1]))
@@ -82,16 +85,24 @@ class GSUMicro:
 
         for block, address in zip(blocks, addresses):
             self.send_bootldr_cmd([0x31], sof=True)
-            self.get_bootldr_ack()
+            if not self.get_bootldr_ack():
+                raise Exception("Bootloader returned NACK")
+            
             self.send_bootldr_cmd([address >> (24-i*8) & 0xFF for i in range(4)])
-            self.get_bootldr_ack()
+            if not self.get_bootldr_ack():
+                raise Exception("Bootloader returned NACK")
+            
             self.send_bootldr_cmd([0xFF] + list(block))
-            self.get_bootldr_ack()
+            if not self.get_bootldr_ack():
+                raise Exception("Bootloader returned NACK")
     
         self.send_bootldr_cmd([0x21], sof=True)
-        self.get_bootldr_ack()
+        if not self.get_bootldr_ack():
+            raise Exception("Bootloader returned NACK")
+        
         self.send_bootldr_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)])
-        self.get_bootldr_ack()
+        if not self.get_bootldr_ack():
+            raise Exception("Bootloader returned NACK")
 
         self.gpio_output(self.micro.nss, 1)
 
