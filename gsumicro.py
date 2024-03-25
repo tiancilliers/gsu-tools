@@ -18,7 +18,7 @@ MISC1Micro = Microcontroller(nrst=16, boot=18, nss=15)
 MISC2Micro = Microcontroller(nrst=37, boot=13, nss=22)
 
 class GSUMicro:
-    def __init__(self, micro, bus):
+    def __init__(self, bus, micro):
         self.micro = micro
         self.bus = bus
 
