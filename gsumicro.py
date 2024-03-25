@@ -3,7 +3,7 @@ import RPi.GPIO as gpio
 import time
 from functools import reduce
 from rich.console import Console
-from rich import track
+from rich.progress import track
 console = Console()
 tohex = lambda list: '[' + ' '.join([f'{i:02X}' for i in list]) + ']'
 
