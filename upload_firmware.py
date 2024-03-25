@@ -15,7 +15,6 @@ eps_cfg.set_pin(gsuconfig.EPSConfig.VSYS, 1)
 time.sleep(0.1)
 
 eps_uc = gsumicro.GSUMicro(spi_bus, gsumicro.EPSMicro)
+time.sleep(0.1)
 with open(sys.argv[1], "rb") as f:
-    print(f.read())
-
-#eps_uc.update_firmware(open())
+    eps_uc.update_firmware(f.read())
