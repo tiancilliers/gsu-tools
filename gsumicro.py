@@ -57,27 +57,33 @@ class GSUMicro:
         self.reset()
         self.gpio_output(self.micro.boot, 0)
 
-    def send_bootldr_cmd(self, cmd, checksum=True, sof=False):
-        time.sleep(0.1)
-        console.log(f"Sending bootloader command: {tohex(cmd)}")
+    def send_bootldr_cmd(self, cmd, checksum=True, sof=False, verbose=True):
+        time.sleep(0.01)
+        self.gpio_output(self.micro.nss, 0)
+        time.sleep(0.01)
+        if verbose:
+            console.log(f"Sending bootloader command: {tohex(cmd)}")
+        else:
+            console.log(f"Sending f{len(cmd)} bytes to bootloader")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + ([0xFF] if len(cmd) == 1 else []))] if checksum else [])
-        self.bus_xfer(data)
+        self.bus_xfer(data, log=verbose)
+        self.gpio_output(self.micro.nss, 1)
     
-    def send_bootldr_ack(self):
-        self.bus_xfer([0x79])
-
     def get_bootldr_ack(self):
+        time.sleep(0.01)
+        self.gpio_output(self.micro.nss, 0)
+        time.sleep(0.01)
         self.bus_xfer([0x00])
         while (res := self.bus_xfer([0x00], log=False)[0]) not in [0x79, 0x1F]:
             time.sleep(0.1)
-        self.send_bootldr_ack()
+        self.bus_xfer([0x79])
+        self.gpio_output(self.micro.nss, 1)
         return res == 0x79
 
     def update_firmware(self, binary, base_address=0x08000000):
         console.log("Updating firmware...")
         self.reset_bootldr()
         
-        self.gpio_output(self.micro.nss, 0)
         self.send_bootldr_cmd([], checksum=False, sof=True)
         
         if not self.get_bootldr_ack():
@@ -107,8 +113,6 @@ class GSUMicro:
         self.send_bootldr_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)])
         if not self.get_bootldr_ack():
             raise Exception("Bootloader returned NACK")
-
-        self.gpio_output(self.micro.nss, 1)
 
 
         
