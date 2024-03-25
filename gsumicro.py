@@ -64,8 +64,8 @@ class GSUMicro:
         time.sleep(BYTE_TIME)
         if verbose:
             console.log(f"Sending bootloader command: {tohex(cmd)}")
-        else:
-            console.log(f"Sending {len(cmd)} bytes to bootloader")
+        #else:
+        #    console.log(f"Sending {len(cmd)} bytes to bootloader")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + ([0xFF] if len(cmd) == 1 else []))] if checksum else [])
         self.bus_xfer(data, log=verbose)
     
@@ -92,7 +92,7 @@ class GSUMicro:
         blocks[-1] += b'\xFF' * (256 - len(blocks[-1]))
         addresses = [base_address + i * 256 for i in range(len(blocks))]
 
-        for block, address in track(zip(blocks, addresses)):
+        for block, address in track(zip(blocks, addresses), total=len(blocks)):
             self.send_bootldr_cmd([0x31], sof=True)
             self.get_bootldr_ack()
             self.send_bootldr_cmd([address >> (24-i*8) & 0xFF for i in range(4)])
