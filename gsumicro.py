@@ -31,7 +31,7 @@ class GSUMicro:
         gpio.setup(self.micro.boot, gpio.OUT, initial=gpio.LOW)
         gpio.setup(self.micro.nss, gpio.OUT, initial=gpio.HIGH)
     
-    def bus_xfer(self, data, log=True):
+    def bus_xfer(self, data, log=False):
         orig = [b for b in data]
         ret = []
         for b in data:
@@ -60,7 +60,7 @@ class GSUMicro:
         self.reset()
         self.gpio_output(self.micro.boot, 0)
 
-    def send_bootldr_cmd(self, cmd, checksum=True, sof=False, verbose=True):
+    def send_bootldr_cmd(self, cmd, checksum=True, sof=False, verbose=False):
         time.sleep(BYTE_TIME)
         if verbose:
             console.log(f"Sending bootloader command: {tohex(cmd)}")
@@ -74,8 +74,9 @@ class GSUMicro:
         self.bus_xfer([0x00], log=False)
         while (res := self.bus_xfer([0x00], log=False)[0]) not in [0x79, 0x1F]:
             time.sleep(BYTE_TIME)
+        if res != 0x79:
+            raise Exception("Bootloader returned NACK")
         self.bus_xfer([0x79], log=False)
-        return res == 0x79
 
     def update_firmware(self, binary, base_address=0x08000000):
         console.log("Updating firmware...")
@@ -85,8 +86,7 @@ class GSUMicro:
         time.sleep(0.01)
         self.send_bootldr_cmd([], checksum=False, sof=True)
         
-        if not self.get_bootldr_ack():
-            raise Exception("Bootloader returned NACK")
+        self.get_bootldr_ack()
 
         blocks = [binary[i:i+256] for i in range(0, len(binary), 256)]
         blocks[-1] += b'\xFF' * (256 - len(blocks[-1]))
@@ -94,24 +94,16 @@ class GSUMicro:
 
         for block, address in track(zip(blocks, addresses)):
             self.send_bootldr_cmd([0x31], sof=True)
-            if not self.get_bootldr_ack():
-                raise Exception("Bootloader returned NACK")
-            
+            self.get_bootldr_ack()
             self.send_bootldr_cmd([address >> (24-i*8) & 0xFF for i in range(4)])
-            if not self.get_bootldr_ack():
-                raise Exception("Bootloader returned NACK")
-            
+            self.get_bootldr_ack()
             self.send_bootldr_cmd([0xFF] + list(block), verbose=False)
-            if not self.get_bootldr_ack():
-                raise Exception("Bootloader returned NACK")
+            self.get_bootldr_ack()
     
         self.send_bootldr_cmd([0x21], sof=True)
-        if not self.get_bootldr_ack():
-            raise Exception("Bootloader returned NACK")
-        
+        self.get_bootldr_ack()
         self.send_bootldr_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)])
-        if not self.get_bootldr_ack():
-            raise Exception("Bootloader returned NACK")
+        self.get_bootldr_ack()
 
         self.gpio_output(self.micro.nss, 1)
         
