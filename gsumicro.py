@@ -73,6 +73,13 @@ class GSUMicro:
             raise Exception("Bootloader returned NACK")
         self.bus_xfer([0x79], log=False)
 
+    def bus_xfer_nss(self, data, log=False):
+        self.gpio_output(self.micro.nss, 0)
+        time.sleep(0.01)
+        ret = self.bus_xfer(data, log=log)
+        self.gpio_output(self.micro.nss, 1)
+        return ret
+
     def update_firmware(self, binary, base_address=0x08000000):
         console.log("Updating firmware...")
         self.reset_bootldr()
@@ -80,7 +87,6 @@ class GSUMicro:
         self.gpio_output(self.micro.nss, 0)
         time.sleep(0.01)
         self.send_bootldr_cmd([], checksum=False, sof=True)
-        
         self.get_bootldr_ack()
 
         self.send_bootldr_cmd([0x44], sof=True)
