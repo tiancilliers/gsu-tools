@@ -73,7 +73,7 @@ class GSUMicro:
         time.sleep(0.01)
         self.gpio_output(self.micro.nss, 0)
         time.sleep(0.01)
-        self.bus_xfer([0x00])
+        self.bus_xfer([0x00, 0xFF])
         while (res := self.bus_xfer([0x00], log=False)[0]) not in [0x79, 0x1F]:
             time.sleep(0.1)
         self.bus_xfer([0x79])
@@ -102,7 +102,7 @@ class GSUMicro:
             if not self.get_bootldr_ack():
                 raise Exception("Bootloader returned NACK")
             
-            self.send_bootldr_cmd([0xFF] + list(block))
+            self.send_bootldr_cmd([0xFF] + list(block), verbose=False)
             if not self.get_bootldr_ack():
                 raise Exception("Bootloader returned NACK")
     
