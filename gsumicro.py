@@ -29,7 +29,10 @@ class GSUMicro:
     
     def bus_xfer(self, data, log=True):
         orig = [b for b in data]
-        ret = self.bus.xfer(data)
+        ret = []
+        for b in data:
+            time.sleep(0.00002)
+            ret.append(self.bus.xfer([b])[0])
         if log:
             console.log(f"SPI >> {tohex(orig)} << {tohex(ret)}")
         return ret
@@ -54,7 +57,6 @@ class GSUMicro:
         self.gpio_output(self.micro.boot, 0)
 
     def send_bootldr_cmd(self, cmd, checksum=True, sof=False):
-        time.sleep(0.1)
         console.log(f"Sending bootloader command: {tohex(cmd)}")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + [0xFF])] if checksum else [])
         self.bus_xfer(data)
