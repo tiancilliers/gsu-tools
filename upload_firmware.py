@@ -1,7 +1,7 @@
 import gsuconfig
 import gsumicro
-import smbus
 import spidev
+import smbus
 import time
 import sys
 
