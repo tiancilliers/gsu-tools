@@ -28,9 +28,10 @@ class GSUMicro:
         gpio.setup(self.micro.nss, gpio.OUT, initial=gpio.HIGH)
     
     def bus_xfer(self, data, log=True):
+        orig = [b for b in data]
         ret = self.bus.xfer(data)
         if log:
-            console.log(f"SPI >> {tohex(data)} << {tohex(ret)}")
+            console.log(f"SPI >> {tohex(orig)} << {tohex(ret)}")
         return ret
     
     def gpio_output(self, pin, state, log=True):
