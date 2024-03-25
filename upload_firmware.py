@@ -8,7 +8,7 @@ import sys
 cfg_bus = smbus.SMBus(1)
 spi_bus = spidev.SpiDev()
 spi_bus.open(0, 0)
-spi_bus.max_speed_hz = 100000
+spi_bus.max_speed_hz = 1000000
 
 eps_cfg = gsuconfig.GSUConfig(cfg_bus, gsuconfig.EPSConfig)
 eps_cfg.set_pin(gsuconfig.EPSConfig.VSYS, 1)

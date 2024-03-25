@@ -18,7 +18,7 @@ OBCMicro = Microcontroller(nrst=11, boot=12, nss=36)
 MISC1Micro = Microcontroller(nrst=16, boot=18, nss=15)
 MISC2Micro = Microcontroller(nrst=37, boot=13, nss=22)
 
-BYTE_TIME = 0.00005
+BYTE_TIME = 0.00002
 
 class GSUMicro:
     def __init__(self, bus, micro):
@@ -92,7 +92,7 @@ class GSUMicro:
         blocks[-1] += b'\xFF' * (256 - len(blocks[-1]))
         addresses = [base_address + i * 256 for i in range(len(blocks))]
 
-        for block, address in track(zip(blocks, addresses), total=len(blocks)):
+        for block, address in track(zip(blocks, addresses), total=len(blocks), description="Uploading..."):
             self.send_bootldr_cmd([0x31], sof=True)
             self.get_bootldr_ack()
             self.send_bootldr_cmd([address >> (24-i*8) & 0xFF for i in range(4)])
