@@ -57,14 +57,17 @@ class GSUMicro:
         self.reset()
         self.gpio_output(self.micro.boot, 0)
 
-    def send_bootldr_cmd(self, cmd, checksum=True, sof=False, verbose=False):
+    def send_cmd(self, cmd, checksum=True, sof=False, verbose=False):
+        self.gpio_output(self.micro.nss, 0)
         time.sleep(BYTE_TIME)
         if verbose:
             console.log(f"Sending bootloader command: {tohex(cmd)}")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + ([0xFF] if len(cmd) == 1 else []))] if checksum else [])
         self.bus_xfer(data, log=verbose)
+        self.gpio_output(self.micro.nss, 1)
     
-    def get_bootldr_ack(self):
+    def get_ack(self):
+        self.gpio_output(self.micro.nss, 0)
         time.sleep(BYTE_TIME)
         self.bus_xfer([0x00], log=False)
         while (res := self.bus_xfer([0x00], log=False)[0]) not in [0x79, 0x1F]:
@@ -72,47 +75,37 @@ class GSUMicro:
         if res != 0x79:
             raise Exception("Bootloader returned NACK")
         self.bus_xfer([0x79], log=False)
-
-    def bus_xfer_nss(self, data, log=False):
-        self.gpio_output(self.micro.nss, 0)
-        time.sleep(0.01)
-        ret = self.bus_xfer(data, log=log)
         self.gpio_output(self.micro.nss, 1)
-        return ret
 
     def update_firmware(self, binary, base_address=0x08000000):
         console.log("Updating firmware...")
         self.reset_bootldr()
         
-        self.gpio_output(self.micro.nss, 0)
-        time.sleep(0.01)
-        self.send_bootldr_cmd([], checksum=False, sof=True)
-        self.get_bootldr_ack()
+        self.send_cmd([], checksum=False, sof=True)
+        self.get_ack()
 
-        self.send_bootldr_cmd([0x44], sof=True)
-        self.get_bootldr_ack()
-        self.send_bootldr_cmd([0x00, 0x00])
-        self.get_bootldr_ack()
-        self.send_bootldr_cmd([0x00, 0x00])
-        self.get_bootldr_ack()
+        self.send_cmd([0x44], sof=True)
+        self.get_ack()
+        self.send_cmd([0x00, 0x00])
+        self.get_ack()
+        self.send_cmd([0x00, 0x00])
+        self.get_ack()
 
         blocks = [binary[i:i+256] for i in range(0, len(binary), 256)]
         blocks[-1] += b'\xFF' * (256 - len(blocks[-1]))
         addresses = [base_address + i * 256 for i in range(len(blocks))]
 
         for block, address in track(zip(blocks, addresses), total=len(blocks), description="Uploading..."):
-            self.send_bootldr_cmd([0x31], sof=True)
-            self.get_bootldr_ack()
-            self.send_bootldr_cmd([address >> (24-i*8) & 0xFF for i in range(4)])
-            self.get_bootldr_ack()
-            self.send_bootldr_cmd([0xFF] + list(block), verbose=False)
-            self.get_bootldr_ack()
+            self.send_cmd([0x31], sof=True)
+            self.get_ack()
+            self.send_cmd([address >> (24-i*8) & 0xFF for i in range(4)])
+            self.get_ack()
+            self.send_cmd([0xFF] + list(block), verbose=False)
+            self.get_ack()
     
-        self.send_bootldr_cmd([0x21], sof=True)
-        self.get_bootldr_ack()
-        self.send_bootldr_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)])
-        self.get_bootldr_ack()
-
-        self.gpio_output(self.micro.nss, 1)
+        self.send_cmd([0x21], sof=True)
+        self.get_ack()
+        self.send_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)])
+        self.get_ack()
         
 
