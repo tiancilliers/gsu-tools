@@ -63,7 +63,10 @@ class GSUMicro:
         if verbose:
             console.log(f"Sending bootloader command: {tohex(cmd)}")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + ([0xFF] if len(cmd) == 1 else []))] if checksum else [])
-        self.bus_xfer(data, log=verbose)
+        self.bus_xfer([data[0]], log=verbose)
+        time.sleep(0.001)
+        if len(data) > 1:
+            self.bus_xfer(data[1:], log=verbose)
         self.gpio_output(self.micro.nss, 1, log=False)
     
     def get_ack(self):
