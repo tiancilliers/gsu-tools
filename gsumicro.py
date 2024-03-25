@@ -33,10 +33,7 @@ class GSUMicro:
     
     def bus_xfer(self, data, log=False):
         orig = [b for b in data]
-        ret = []
-        for b in data:
-            time.sleep(BYTE_TIME)
-            ret.append(self.bus.xfer([b])[0])
+        ret = self.bus.xfer(data)
         if log:
             console.log(f"SPI >> {tohex(orig)} << {tohex(ret)}")
         return ret
@@ -64,8 +61,6 @@ class GSUMicro:
         time.sleep(BYTE_TIME)
         if verbose:
             console.log(f"Sending bootloader command: {tohex(cmd)}")
-        #else:
-        #    console.log(f"Sending {len(cmd)} bytes to bootloader")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + ([0xFF] if len(cmd) == 1 else []))] if checksum else [])
         self.bus_xfer(data, log=verbose)
     
@@ -73,7 +68,7 @@ class GSUMicro:
         time.sleep(BYTE_TIME)
         self.bus_xfer([0x00], log=False)
         while (res := self.bus_xfer([0x00], log=False)[0]) not in [0x79, 0x1F]:
-            time.sleep(BYTE_TIME)
+            pass
         if res != 0x79:
             raise Exception("Bootloader returned NACK")
         self.bus_xfer([0x79], log=False)
@@ -85,6 +80,7 @@ class GSUMicro:
         self.gpio_output(self.micro.nss, 0)
         time.sleep(0.01)
         self.send_bootldr_cmd([], checksum=False, sof=True)
+        
         self.get_bootldr_ack()
 
         self.send_bootldr_cmd([0x44], sof=True)
