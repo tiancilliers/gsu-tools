@@ -22,6 +22,7 @@ class GSUMicro:
         self.micro = micro
         self.bus = bus
 
+        gpio.setwarnings(False)
         gpio.setmode(gpio.BOARD)
         gpio.setup(self.micro.nrst, gpio.OUT, initial=gpio.HIGH)
         gpio.setup(self.micro.boot, gpio.OUT, initial=gpio.LOW)
@@ -31,7 +32,7 @@ class GSUMicro:
         orig = [b for b in data]
         ret = []
         for b in data:
-            time.sleep(0.00002)
+            time.sleep(0.00005)
             ret.append(self.bus.xfer([b])[0])
         if log:
             console.log(f"SPI >> {tohex(orig)} << {tohex(ret)}")
@@ -57,6 +58,7 @@ class GSUMicro:
         self.gpio_output(self.micro.boot, 0)
 
     def send_bootldr_cmd(self, cmd, checksum=True, sof=False):
+        time.sleep(0.1)
         console.log(f"Sending bootloader command: {tohex(cmd)}")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + [0xFF])] if checksum else [])
         self.bus_xfer(data)
@@ -66,7 +68,7 @@ class GSUMicro:
 
     def get_bootldr_ack(self):
         self.bus_xfer([0x00])
-        while (res := self.bus_xfer([0x00])[0]) not in [0x79, 0x1F]:
+        while (res := self.bus_xfer([0x00], log=False)[0]) not in [0x79, 0x1F]:
             time.sleep(0.1)
         self.send_bootldr_ack()
         return res == 0x79
