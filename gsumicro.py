@@ -60,7 +60,7 @@ class GSUMicro:
     def send_bootldr_cmd(self, cmd, checksum=True, sof=False):
         time.sleep(0.1)
         console.log(f"Sending bootloader command: {tohex(cmd)}")
-        data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + [0xFF])] if checksum else [])
+        data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + ([0xFF] if len(cmd) == 1 else []))] if checksum else [])
         self.bus_xfer(data)
     
     def send_bootldr_ack(self):
