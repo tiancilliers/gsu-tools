@@ -51,6 +51,8 @@ class MyApp(App):
         self.query_one("#status").border_title = "Status"
         self.stats = eps_uc.get_stats()
         self.set_interval(1/5, self.update_status)
+        eps_cfg.set_displayfn(lambda text: self.query_one(RichLog).write(text))
+        eps_uc.set_displayfn(lambda text: self.query_one(RichLog).write(text))
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "cfg_vsys":

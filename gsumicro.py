@@ -10,6 +10,13 @@ console = Console()
 tohex = lambda list: '[' + ' '.join([f'{i:02X}' for i in list]) + ']'
 bytes_read_int16_2s = lambda msb, lsb: ((msb << 8) | lsb) if msb < 0x80 else -((msb ^ 0xFF) << 8 | (lsb ^ 0xFF)) - 1
 
+class FakeConsole:
+    def __init__(self, displayfn):
+        self.displayfn = displayfn
+    
+    def log(self, msg):
+        self.displayfn(msg)    
+
 @dataclass
 class Microcontroller:
     nrst: int
@@ -33,6 +40,9 @@ class GSUMicro:
         gpio.setup(self.micro.nrst, gpio.OUT, initial=gpio.HIGH)
         gpio.setup(self.micro.boot, gpio.OUT, initial=gpio.LOW)
         gpio.setup(self.micro.nss, gpio.OUT, initial=gpio.HIGH)
+    
+    def set_displayfn(self, displayfn):
+        self.console = FakeConsole(displayfn)
     
     def bus_xfer(self, data, log=False):
         orig = [b for b in data]

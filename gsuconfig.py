@@ -4,6 +4,13 @@ from rich.console import Console
 console = Console()
 tobin = lambda list: '[' + ' '.join([f'{i:08b}' for i in list]) + ']'
 
+class FakeConsole:
+    def __init__(self, displayfn):
+        self.displayfn = displayfn
+    
+    def log(self, msg):
+        self.displayfn(msg)
+
 @dataclass
 class PinConfig:
     location: tuple
@@ -68,6 +75,9 @@ class GSUConfig:
         self.bus_write(PCAL_ADDRESS[self.device], PCAL_IOCR, self.opendrain)
         self.bus_write(PCAL_ADDRESS[self.device], PCAL_OUT, self.state)
         self.bus_write(PCAL_ADDRESS[self.device], PCAL_CFG, [0 for i in range(3)])
+    
+    def set_displayfn(self, displayfn):
+        self.console = FakeConsole(displayfn)
 
     def bus_write(self, address, register, data, log=True):
         self.bus.write_i2c_block_data(address, register, data)
