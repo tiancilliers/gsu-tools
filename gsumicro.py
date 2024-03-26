@@ -8,7 +8,7 @@ from enum import Enum
 
 console = Console()
 tohex = lambda list: '[' + ' '.join([f'{i:02X}' for i in list]) + ']'
-bytes_read_int16 = lambda msb, lsb: ((msb&0x7F) << 8) + lsb * (-1 if msb&0x80 else 1)
+bytes_read_int16_2s = lambda msb, lsb: ((msb << 8) | lsb) if msb < 0x80 else -((msb ^ 0xFF) << 8 | lsb) - 1
 
 @dataclass
 class Microcontroller:
@@ -173,16 +173,16 @@ class EPSMicro(GSUMicro):
         return {
             "3V3": {
                 "state": data[EPSReg.REG_3V3_STATE.value],
-                "voltage": bytes_read_int16(data[EPSReg.REG_3V3_V.value], data[EPSReg.REG_3V3_V.value+1]),
-                "current": bytes_read_int16(data[EPSReg.REG_3V3_I.value], data[EPSReg.REG_3V3_I.value+1])
+                "voltage": 0.004*bytes_read_int16_2s(data[EPSReg.REG_3V3_V.value], data[EPSReg.REG_3V3_V.value+1]),
+                "current": 0.0005*bytes_read_int16_2s(data[EPSReg.REG_3V3_I.value], data[EPSReg.REG_3V3_I.value+1])
             },
             "5V": {
                 "state": data[EPSReg.REG_5V_STATE.value],
-                "voltage": bytes_read_int16(data[EPSReg.REG_5V_V.value], data[EPSReg.REG_5V_V.value+1]),
-                "current": bytes_read_int16(data[EPSReg.REG_5V_I.value], data[EPSReg.REG_5V_I.value+1])
+                "voltage": 0.004*bytes_read_int16_2s(data[EPSReg.REG_5V_V.value], data[EPSReg.REG_5V_V.value+1]),
+                "current": 0.0005*bytes_read_int16_2s(data[EPSReg.REG_5V_I.value], data[EPSReg.REG_5V_I.value+1])
             },
             "RAW": {
-                "voltage": bytes_read_int16(data[EPSReg.REG_RAW_V.value], data[EPSReg.REG_RAW_V.value+1]),
-                "current": bytes_read_int16(data[EPSReg.REG_RAW_I.value], data[EPSReg.REG_RAW_I.value+1])
+                "voltage": 0.004*bytes_read_int16_2s(data[EPSReg.REG_RAW_V.value], data[EPSReg.REG_RAW_V.value+1]),
+                "current": 0.0005*bytes_read_int16_2s(data[EPSReg.REG_RAW_I.value], data[EPSReg.REG_RAW_I.value+1])
             }
         }
