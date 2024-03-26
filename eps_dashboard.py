@@ -33,13 +33,13 @@ class MyApp(App):
         yield Horizontal(
             Vertical(
                 Label("[underline]3V3 REGULATOR[/underline]"),
-                Horizontal(Label("3.300 V ", id="l3v3_v"), Sparkline(data=[0]*1000, id="g3v3_v")),
-                Horizontal(Label("0.000 A ", id="l3v3_i"), Sparkline(data=[0]*1000, id="g3v3_i"))
+                Horizontal(Label("3.300 V ", id="l3v3_v"), Sparkline(data=[0]*300, id="g3v3_v")),
+                Horizontal(Label("0.000 A ", id="l3v3_i"), Sparkline(data=[0]*300, id="g3v3_i"))
             ),
             Vertical(
                 Label("[underline]5V0 REGULATOR[/underline]"),
-                Horizontal(Label("5.000 V ", id="l5v_v"), Sparkline(data=[0]*1000, id="g5v_v")),
-                Horizontal(Label("0.000 A ", id="l5v_i"), Sparkline(data=[0]*1000, id="g5v_i"))
+                Horizontal(Label("5.000 V ", id="l5v_v"), Sparkline(data=[0]*300, id="g5v_v")),
+                Horizontal(Label("0.000 A ", id="l5v_i"), Sparkline(data=[0]*300, id="g5v_i"))
             ),
             id="status")
         yield Footer()
@@ -80,7 +80,7 @@ class MyApp(App):
         self.query_one("#g3v3_i").data = [2] + self.query_one("#g3v3_i").data[2:] + [self.stats["3V3"]["current"]]
         self.query_one("#g5v_v").data = [5] + self.query_one("#g5v_v").data[2:] + [self.stats["5V"]["voltage"]]
         self.query_one("#g5v_i").data = [2] + self.query_one("#g5v_i").data[2:] + [self.stats["5V"]["current"]]
-        self.refresh()
+        self.query_one("#l3v3_v").refresh()
 
 if __name__ == "__main__":
     app = MyApp()
