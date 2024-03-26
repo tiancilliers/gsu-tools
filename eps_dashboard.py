@@ -72,8 +72,8 @@ class MyApp(App):
     
     def update_status(self):
         self.stats = eps_uc.get_stats()
-        self.query_one("#log").write(f"3V3: {self.stats['3V3']['voltage']:.3f} V, {self.stats['3V3']['current']:.3f} A\n")
-        self.query_one("#log").write(f"5V: {self.stats['5V']['voltage']:.3f} V, {self.stats['5V']['current']:.3f} A\n")
+        self.query_one(RichLog).write(f"3V3: {self.stats['3V3']['voltage']:.3f} V, {self.stats['3V3']['current']:.3f} A\n")
+        self.query_one(RichLog).write(f"5V: {self.stats['5V']['voltage']:.3f} V, {self.stats['5V']['current']:.3f} A\n")
         self.query_one("#l3v3_v").text = f'{self.stats["3V3"]["voltage"]:.3f} V'
         self.query_one("#l3v3_i").text = f'{self.stats["3V3"]["current"]:.3f} A'
         self.query_one("#l5v_v").text = f'{self.stats["5V"]["voltage"]:.3f} V'
