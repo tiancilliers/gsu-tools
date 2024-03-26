@@ -4,6 +4,8 @@ import time
 from functools import reduce
 from rich.console import Console
 from rich.progress import track
+from enum import Enum
+
 console = Console()
 tohex = lambda list: '[' + ' '.join([f'{i:02X}' for i in list]) + ']'
 
@@ -13,10 +15,10 @@ class Microcontroller:
     boot: int
     nss: int
 
-EPSMicro = Microcontroller(nrst=38, boot=40, nss=35)
-OBCMicro = Microcontroller(nrst=11, boot=12, nss=36)
-MISC1Micro = Microcontroller(nrst=16, boot=18, nss=15)
-MISC2Micro = Microcontroller(nrst=37, boot=13, nss=22)
+EPSPins = Microcontroller(nrst=38, boot=40, nss=35)
+OBCPins = Microcontroller(nrst=11, boot=12, nss=36)
+MISC1Pins = Microcontroller(nrst=16, boot=18, nss=15)
+MISC2Pins = Microcontroller(nrst=37, boot=13, nss=22)
 
 BYTE_TIME = 0.00002
 
@@ -87,6 +89,14 @@ class GSUMicro:
         self.bus_xfer([0x79], log=log)
         self.gpio_output(self.micro.nss, 1, log=False)
 
+    def recv_data(self, log=False):
+        self.gpio_output(self.micro.nss, 0, log=False)
+        time.sleep(BYTE_TIME)
+        length = self.bus_xfer([0x00], log=log)[0]+1
+        data = self.bus_xfer([0x00] * length, log=log)
+        self.gpio_output(self.micro.nss, 1, log=False)
+        return data
+
     def update_firmware(self, binary, base_address=0x08000000):
         console.log("Updating firmware...")
         self.reset_bootldr()
@@ -117,5 +127,57 @@ class GSUMicro:
         self.get_ack()
         self.send_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)])
         self.get_ack()
-        
 
+class EPSReg(Enum):
+    REG_3V3_STATE = 0x00
+    REG_5V_STATE = 0x01
+    REG_CH1_STATE = 0x02
+    REG_CH2_STATE = 0x03
+    REG_LED_STATE = 0x08
+    REG_3V3_V = 0x10
+    REG_3V3_I = 0x12
+    REG_5V_V = 0x14
+    REG_5V_I = 0x16
+    REG_CH1_V = 0x18
+    REG_CH1_I = 0x1A
+    REG_CH2_V = 0x1C
+    REG_CH2_I = 0x1E
+    REG_RAW_V = 0x20
+    REG_RAW_I = 0x22
+
+class EPSMicro(GSUMicro):
+    def __init__(self, bus):
+        super().__init__(bus, EPSPins)
+        self.eps_write_regs(EPSReg.REG_3V3_STATE, [0x00]*0x10)
+
+    def eps_write_regs(self, addr, data, log=True):
+        self.send_cmd([0x01], log=log, sof=True, slowfirst=True)
+        self.get_ack(slowfirst=True, log=log)
+        self.send_cmd([len(data), addr] + data, slowfirst=True, log=log)
+        self.get_ack(slowfirst=True, log=log)
+    
+    def eps_read_all(self, log=True):
+        self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
+        self.get_ack(slowfirst=True, log=log)
+        ret = self.recv_data(slowfirst=True, log=log)
+        self.get_ack(slowfirst=True, log=log)
+        return ret
+
+    def eps_get_stats(self):
+        data = self.eps_read_all()
+        return {
+            "3V3": {
+                "state": data[EPSReg.REG_3V3_STATE.value],
+                "voltage": (data[EPSReg.REG_3V3_V.value] << 8) + data[EPSReg.REG_3V3_V.value+1],
+                "current": (data[EPSReg.REG_3V3_I.value] << 8) + data[EPSReg.REG_3V3_I.value+1]
+            },
+            "5V": {
+                "state": data[EPSReg.REG_5V_STATE.value],
+                "voltage": (data[EPSReg.REG_5V_V.value] << 8) + data[EPSReg.REG_5V_V.value+1],
+                "current": (data[EPSReg.REG_5V_I.value] << 8) + data[EPSReg.REG_5V_I.value+1]
+            },
+            "RAW": {
+                "voltage": (data[EPSReg.REG_RAW_V.value] << 8) + data[EPSReg.REG_RAW_V.value+1],
+                "current": (data[EPSReg.REG_RAW_I.value] << 8) + data[EPSReg.REG_RAW_I.value+1]
+            }
+        }
