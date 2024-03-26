@@ -63,7 +63,7 @@ class GSUMicro:
         self.gpio_output(self.micro.nss, 0, log=False)
         time.sleep(BYTE_TIME)
         if log:
-            console.log(f"Sending bootloader command: {tohex(cmd)}")
+            console.log(f"Sending command: {tohex(cmd)}")
         data = ([0x5a] if sof else []) + cmd + ([reduce(lambda x, y: x ^ y, cmd + ([0xFF] if len(cmd) == 1 else []))] if checksum else [])
         if slowfirst:
             self.bus_xfer([data[0]], log=log)
@@ -75,17 +75,20 @@ class GSUMicro:
             self.bus_xfer(data, log=log)
         self.gpio_output(self.micro.nss, 1, log=False)
     
-    def get_ack(self, log=False, slowfirst=False):
+    def get_ack(self, log=False, slowfirst=False, timeout=1e3):
         self.gpio_output(self.micro.nss, 0, log=False)
         time.sleep(BYTE_TIME)
         self.bus_xfer([0x00], log=log)
         if slowfirst:
             self.gpio_output(self.micro.nss, 1, log=False)
             self.gpio_output(self.micro.nss, 0, log=False)
+        iter = 0
         while (res := self.bus_xfer([0x00], log=log)[0]) not in [0x79, 0x1F]:
-            pass
+            iter += 1
+            if iter > timeout:
+                raise Exception("SPI iterations exceeded")
         if res != 0x79:
-            raise Exception("Bootloader returned NACK")
+            raise Exception("SPI returned NACK")
         self.bus_xfer([0x79], log=log)
         self.gpio_output(self.micro.nss, 1, log=False)
 
@@ -151,16 +154,18 @@ class EPSMicro(GSUMicro):
         self.eps_write_regs(EPSReg.REG_3V3_STATE, [0x00]*0x10)
 
     def eps_write_regs(self, addr, data, log=True):
+        if type(addr) is EPSReg:
+            addr = addr.value
         self.send_cmd([0x01], log=log, sof=True, slowfirst=True)
-        self.get_ack(slowfirst=True, log=log)
+        self.get_ack(slowfirst=True, log=log, timeout=20)
         self.send_cmd([len(data), addr] + data, slowfirst=True, log=log)
-        self.get_ack(slowfirst=True, log=log)
+        self.get_ack(slowfirst=True, log=log, timeout=20)
     
     def eps_read_all(self, log=True):
         self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
-        self.get_ack(slowfirst=True, log=log)
+        self.get_ack(slowfirst=True, log=log, timeout=20)
         ret = self.recv_data(slowfirst=True, log=log)
-        self.get_ack(slowfirst=True, log=log)
+        self.get_ack(slowfirst=True, log=log, timeout=20)
         return ret
 
     def eps_get_stats(self):
