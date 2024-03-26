@@ -152,7 +152,7 @@ class EPSMicro(GSUMicro):
     def __init__(self, bus):
         super().__init__(bus, EPSPins)
 
-    def eps_write_regs(self, addr, data, log=True):
+    def write_regs(self, addr, data, log=True):
         if type(addr) is EPSReg:
             addr = addr.value
         self.send_cmd([0x01], log=log, sof=True, slowfirst=True)
@@ -160,14 +160,14 @@ class EPSMicro(GSUMicro):
         self.send_cmd([len(data), addr] + data, slowfirst=True, log=log)
         self.get_ack(slowfirst=True, log=log, timeout=20)
     
-    def eps_read_all(self, log=True):
+    def read_all(self, log=True):
         self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
         self.get_ack(slowfirst=True, log=log, timeout=20)
         ret = self.recv_data(log=log)
         self.get_ack(slowfirst=True, log=log, timeout=20)
         return ret
 
-    def eps_get_stats(self):
+    def get_stats(self):
         data = self.eps_read_all()
         return {
             "3V3": {
