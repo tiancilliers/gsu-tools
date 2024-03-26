@@ -151,7 +151,6 @@ class EPSReg(Enum):
 class EPSMicro(GSUMicro):
     def __init__(self, bus):
         super().__init__(bus, EPSPins)
-        self.eps_write_regs(EPSReg.REG_3V3_STATE, [0x00]*0x10)
 
     def eps_write_regs(self, addr, data, log=True):
         if type(addr) is EPSReg:
@@ -164,7 +163,7 @@ class EPSMicro(GSUMicro):
     def eps_read_all(self, log=True):
         self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
         self.get_ack(slowfirst=True, log=log, timeout=20)
-        ret = self.recv_data(slowfirst=True, log=log)
+        ret = self.recv_data(log=log)
         self.get_ack(slowfirst=True, log=log, timeout=20)
         return ret
 
