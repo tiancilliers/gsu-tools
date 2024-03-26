@@ -72,10 +72,10 @@ class MyApp(App):
     
     def update_status(self):
         self.stats = eps_uc.get_stats()
-        self.query_one("#l3v3_v").text = f"{self.stats["3V3"]["voltage"]:.3f} V"
-        self.query_one("#l3v3_i").text = f"{self.stats["3V3"]["current"]:.3f} A"
-        self.query_one("#l5v_v").text = f"{self.stats["5V"]["voltage"]:.3f} V"
-        self.query_one("#l5v_i").text = f"{self.stats["5V"]["current"]:.3f} A"
+        self.query_one("#l3v3_v").text = f'{self.stats["3V3"]["voltage"]:.3f} V'
+        self.query_one("#l3v3_i").text = f'{self.stats["3V3"]["current"]:.3f} A'
+        self.query_one("#l5v_v").text = f'{self.stats["5V"]["voltage"]:.3f} V'
+        self.query_one("#l5v_i").text = f'{self.stats["5V"]["current"]:.3f} A'
         self.query_one("#g3v3_v").data = self.query_one("#g3v3_v").data[1:] + [self.stats["3V3"]["voltage"]]
         self.query_one("#g3v3_i").data = self.query_one("#g3v3_i").data[1:] + [self.stats["3V3"]["current"]]
         self.query_one("#g5v_v").data = self.query_one("#g5v_v").data[1:] + [self.stats["5V"]["voltage"]]
