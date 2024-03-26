@@ -74,6 +74,14 @@ class GSUConfig:
         if log:
             console.log(f"I2C {address:08b} >> {register:02X} = {tobin(data)}")
 
+    def toggle_pin(self, pin):
+        if type(pin) != self.device:
+            raise Exception("Invalid pin enum provided. Must be of the same type as the device.")
+        pin = pin.value
+        
+        self.state[pin.location[0]] ^= (1 << pin.location[1])
+        self.bus_write(PCAL_ADDRESS[self.device], PCAL_OUT, self.state)
+
     def set_pin(self, pin, value):
         if type(pin) != self.device:
             raise Exception("Invalid pin enum provided. Must be of the same type as the device.")
