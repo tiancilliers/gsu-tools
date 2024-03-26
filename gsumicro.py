@@ -8,7 +8,7 @@ from enum import Enum
 
 console = Console()
 tohex = lambda list: '[' + ' '.join([f'{i:02X}' for i in list]) + ']'
-bytes_read_int16 = lambda msb, lsb: (msb&0x7F) << 8 + lsb * (-1 if msb&0x80 else 1)
+bytes_read_int16 = lambda msb, lsb: ((msb&0x7F) << 8) + lsb * (-1 if msb&0x80 else 1)
 
 @dataclass
 class Microcontroller:
