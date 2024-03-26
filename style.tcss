@@ -33,5 +33,5 @@ Label {
 }
 
 Sparkline {
-    width: 100%;
+    width: 1fr;
 }

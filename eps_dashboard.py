@@ -50,7 +50,7 @@ class MyApp(App):
         self.query_one("#commands").border_title = "EPS Commands"
         self.query_one("#status").border_title = "Status"
         self.stats = eps_uc.get_stats()
-        self.set_interval(1, self.update_status)
+        self.set_interval(1/5, self.update_status)
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "cfg_vsys":
@@ -72,12 +72,10 @@ class MyApp(App):
     
     def update_status(self):
         self.stats = eps_uc.get_stats()
-        self.query_one(RichLog).write(f"3V3: {self.stats['3V3']['voltage']:.3f} V, {self.stats['3V3']['current']:.3f} A\n")
-        self.query_one(RichLog).write(f"5V: {self.stats['5V']['voltage']:.3f} V, {self.stats['5V']['current']:.3f} A\n")
-        self.query_one("#l3v3_v").text = f'{self.stats["3V3"]["voltage"]:.3f} V'
-        self.query_one("#l3v3_i").text = f'{self.stats["3V3"]["current"]:.3f} A'
-        self.query_one("#l5v_v").text = f'{self.stats["5V"]["voltage"]:.3f} V'
-        self.query_one("#l5v_i").text = f'{self.stats["5V"]["current"]:.3f} A'
+        self.query_one("#l3v3_v").renderable = f'{self.stats["3V3"]["voltage"]:.3f} V'
+        self.query_one("#l3v3_i").renderable = f'{self.stats["3V3"]["current"]:.3f} A'
+        self.query_one("#l5v_v").renderable = f'{self.stats["5V"]["voltage"]:.3f} V'
+        self.query_one("#l5v_i").renderable = f'{self.stats["5V"]["current"]:.3f} A'
         self.query_one("#g3v3_v").data = self.query_one("#g3v3_v").data[1:] + [self.stats["3V3"]["voltage"]]
         self.query_one("#g3v3_i").data = self.query_one("#g3v3_i").data[1:] + [self.stats["3V3"]["current"]]
         self.query_one("#g5v_v").data = self.query_one("#g5v_v").data[1:] + [self.stats["5V"]["voltage"]]
