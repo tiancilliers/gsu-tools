@@ -75,7 +75,7 @@ class GSUMicro:
             self.bus_xfer(data, log=log)
         self.gpio_output(self.micro.nss, 1, log=False)
     
-    def get_ack(self, log=False, slowfirst=False, timeout=1e3):
+    def get_ack(self, log=False, slowfirst=False, timeout=1e6):
         self.gpio_output(self.micro.nss, 0, log=False)
         time.sleep(BYTE_TIME)
         self.bus_xfer([0x00], log=log)
@@ -168,7 +168,7 @@ class EPSMicro(GSUMicro):
         return ret
 
     def get_stats(self):
-        data = self.eps_read_all()
+        data = self.read_all()
         return {
             "3V3": {
                 "state": data[EPSReg.REG_3V3_STATE.value],
