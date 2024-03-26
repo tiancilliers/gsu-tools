@@ -172,7 +172,7 @@ class EPSMicro(GSUMicro):
         self.send_cmd([len(data), addr] + data, slowfirst=True, log=log)
         self.get_ack(slowfirst=True, log=log, timeout=20)
     
-    def read_all(self, log=True):
+    def read_all(self, log=False):
         self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
         self.get_ack(slowfirst=True, log=log, timeout=20)
         ret = self.recv_data(log=log)
