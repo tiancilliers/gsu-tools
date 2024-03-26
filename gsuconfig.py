@@ -77,7 +77,8 @@ class GSUConfig:
         self.bus_write(PCAL_ADDRESS[self.device], PCAL_CFG, [0 for i in range(3)])
     
     def set_displayfn(self, displayfn):
-        self.console = FakeConsole(displayfn)
+        global console
+        console = FakeConsole(displayfn)
 
     def bus_write(self, address, register, data, log=True):
         self.bus.write_i2c_block_data(address, register, data)

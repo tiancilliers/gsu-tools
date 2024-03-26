@@ -42,7 +42,8 @@ class GSUMicro:
         gpio.setup(self.micro.nss, gpio.OUT, initial=gpio.HIGH)
     
     def set_displayfn(self, displayfn):
-        self.console = FakeConsole(displayfn)
+        global console
+        console = FakeConsole(displayfn)
     
     def bus_xfer(self, data, log=False):
         orig = [b for b in data]
