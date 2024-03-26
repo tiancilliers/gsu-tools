@@ -72,15 +72,14 @@ class MyApp(App):
     
     def update_status(self):
         self.stats = eps_uc.get_stats()
-        self.query_one("#l3v3_v").text = f"{self.stats[0x10]:.3f} V"
-        self.query_one("#l3v3_i").text = f"{self.stats[0x12]:.3f} A"
-        self.query_one("#l5v_v").text = f"{self.stats[0x14]:.3f} V"
-        self.query_one("#l5v_i").text = f"{self.stats[0x16]:.3f} A"
-        self.query_one("#g3v3_v").data = self.query_one("#g3v3_v").data[1:] + [self.stats[0x10]]
-        self.query_one("#g3v3_i").data = self.query_one("#g3v3_i").data[1:] + [self.stats[0x12]]
-        self.query_one("#g5v_v").data = self.query_one("#g5v_v").data[1:] + [self.stats[0x14]]
-        self.query_one("#g5v_i").data = self.query_one("#g5v_i").data[1:] + [self.stats[0x16]]
-        
+        self.query_one("#l3v3_v").text = f"{self.stats["3V3"]["voltage"]:.3f} V"
+        self.query_one("#l3v3_i").text = f"{self.stats["3V3"]["current"]:.3f} A"
+        self.query_one("#l5v_v").text = f"{self.stats["5V"]["voltage"]:.3f} V"
+        self.query_one("#l5v_i").text = f"{self.stats["5V"]["current"]:.3f} A"
+        self.query_one("#g3v3_v").data = self.query_one("#g3v3_v").data[1:] + [self.stats["3V3"]["voltage"]]
+        self.query_one("#g3v3_i").data = self.query_one("#g3v3_i").data[1:] + [self.stats["3V3"]["current"]]
+        self.query_one("#g5v_v").data = self.query_one("#g5v_v").data[1:] + [self.stats["5V"]["voltage"]]
+        self.query_one("#g5v_i").data = self.query_one("#g5v_i").data[1:] + [self.stats["5V"]["current"]]
 
 if __name__ == "__main__":
     app = MyApp()
