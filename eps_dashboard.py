@@ -81,6 +81,9 @@ class MyApp(App):
         self.query_one("#g5v_v").data = [5] + self.query_one("#g5v_v").data[2:] + [self.stats["5V"]["voltage"]]
         self.query_one("#g5v_i").data = [2] + self.query_one("#g5v_i").data[2:] + [self.stats["5V"]["current"]]
         self.query_one("#l3v3_v").refresh()
+        self.query_one("#l3v3_i").refresh()
+        self.query_one("#l5v_v").refresh()
+        self.query_one("#l5v_i").refresh()
 
 if __name__ == "__main__":
     app = MyApp()
