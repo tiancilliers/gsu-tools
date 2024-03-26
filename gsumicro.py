@@ -80,7 +80,9 @@ class GSUMicro:
         if slowfirst:
             self.bus_xfer([data[0]], log=log)
             self.gpio_output(self.micro.nss, 1, log=False)
+            time.sleep(0.01)
             self.gpio_output(self.micro.nss, 0, log=False)
+            time.sleep(0.01)
             if len(data) > 1:
                 self.bus_xfer(data[1:], log=log)
         else:
@@ -93,7 +95,9 @@ class GSUMicro:
         self.bus_xfer([0x00], log=log)
         if slowfirst:
             self.gpio_output(self.micro.nss, 1, log=False)
+            time.sleep(0.01)
             self.gpio_output(self.micro.nss, 0, log=False)
+            time.sleep(0.01)
         iter = 0
         while (res := self.bus_xfer([0x00], log=log)[0]) not in [0x79, 0x1F]:
             iter += 1
@@ -174,8 +178,11 @@ class EPSMicro(GSUMicro):
     
     def read_all(self, log=False):
         self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
+        time.sleep(0.01)
         self.get_ack(slowfirst=True, log=log, timeout=100)
+        time.sleep(0.01)
         ret = self.recv_data(log=log)
+        time.sleep(0.01)
         self.get_ack(slowfirst=True, log=log, timeout=100)
         return ret
 
