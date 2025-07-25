@@ -176,10 +176,6 @@ class EPSMicro(GSUMicro):
         self.send_cmd([len(data), addr] + data, slowfirst=True, log=log)
         self.get_ack(slowfirst=True, log=log, timeout=100)
     
-    def test_bootloader(self):
-        self.send_cmd([0x03], log=True, sof=True, slowfirst=True)
-        self.get_ack(slowfirst=True, log=True, timeout=100)
-    
     def read_all(self, log=False):
         self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
         time.sleep(0.01)
@@ -206,5 +202,9 @@ class EPSMicro(GSUMicro):
             "RAW": {
                 "voltage": 0.004*bytes_read_int16_2s(data[EPSReg.REG_RAW_V.value], data[EPSReg.REG_RAW_V.value+1]),
                 "current": 0.0005*bytes_read_int16_2s(data[EPSReg.REG_RAW_I.value], data[EPSReg.REG_RAW_I.value+1])
+            },
+            "BOOTL": {
+                "req": data[0x30],
+                "ack": data[0x31]
             }
         }

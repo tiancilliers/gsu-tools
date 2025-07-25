@@ -66,7 +66,8 @@ class MyApp(App):
         elif event.button.id == "cfg_raw":
             eps_cfg.toggle_pin(gsuconfig.EPSConfig.RAW_PIN_BUS)
         elif event.button.id == "cmd_rst":
-            eps_uc.reset()
+            #eps_uc.reset()
+            eps_uc.write_regs(0x20, [0x01])
         elif event.button.id == "cmd_5v":
             eps_uc.write_regs(gsumicro.EPSReg.REG_5V_STATE, [0x00 if self.stats["5V"]["state"] else 0x01])
         elif event.button.id == "cmd_3v3":
@@ -74,7 +75,7 @@ class MyApp(App):
         #elif event.button.id == "cmd_led":
         #    eps_uc.write_regs(gsumicro.EPSReg.REG_LED_STATE, [0x01])
         elif event.button.id == "cmd_boot":
-            eps_uc.test_bootloader()
+            self.query_one("#l3v3_v").renderable = eps_uc.re
     
     
     def update_status(self):
@@ -91,6 +92,7 @@ class MyApp(App):
         self.query_one("#l3v3_i").refresh()
         self.query_one("#l5v_v").refresh()
         self.query_one("#l5v_i").refresh()
+        self.query_one(RichLog).write(str(self.stats["BOOTL"]))
 
 if __name__ == "__main__":
     app = MyApp()
