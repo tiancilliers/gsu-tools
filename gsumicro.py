@@ -176,6 +176,10 @@ class EPSMicro(GSUMicro):
         self.send_cmd([len(data), addr] + data, slowfirst=True, log=log)
         self.get_ack(slowfirst=True, log=log, timeout=100)
     
+    def test_bootloader(self):
+        self.send_cmd([0x03], log=True, sof=True, slowfirst=True)
+        self.get_ack(slowfirst=True, log=True, timeout=100)
+    
     def read_all(self, log=False):
         self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
         time.sleep(0.01)

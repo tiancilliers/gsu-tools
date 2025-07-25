@@ -29,7 +29,8 @@ class MyApp(App):
         yield Header()
         yield Horizontal(RichLog(), id="log")
         yield Horizontal(Button("VSYS", id="cfg_vsys", disabled=True), Button("5V EF", id="cfg_5v"), Button("3V3 EF", id="cfg_3v3"), Button("RAW EF", id="cfg_raw"), id="config")
-        yield Horizontal(Button("RESET", id="cmd_rst"), Button("5V REG ON", id="cmd_5v"), Button("3V3 REG ON", id="cmd_3v3"), Button("LED ON", id="cmd_led"), id="commands")
+        #yield Horizontal(Button("RESET", id="cmd_rst"), Button("5V REG ON", id="cmd_5v"), Button("3V3 REG ON", id="cmd_3v3"), Button("LED ON", id="cmd_led"), id="commands")
+        yield Horizontal(Button("RESET", id="cmd_rst"), Button("5V REG ON", id="cmd_5v"), Button("3V3 REG ON", id="cmd_3v3"), Button("BOOT", id="cmd_boot"), id="commands")
         yield Horizontal(
             Vertical(
                 Label("[underline]3V3 REGULATOR[/underline]"),
@@ -70,8 +71,11 @@ class MyApp(App):
             eps_uc.write_regs(gsumicro.EPSReg.REG_5V_STATE, [0x00 if self.stats["5V"]["state"] else 0x01])
         elif event.button.id == "cmd_3v3":
             eps_uc.write_regs(gsumicro.EPSReg.REG_3V3_STATE, [0x00 if self.stats["3V3"]["state"] else 0x01])
-        elif event.button.id == "cmd_led":
-            eps_uc.write_regs(gsumicro.EPSReg.REG_LED_STATE, [0x01])
+        #elif event.button.id == "cmd_led":
+        #    eps_uc.write_regs(gsumicro.EPSReg.REG_LED_STATE, [0x01])
+        elif event.button.id == "cmd_boot":
+            eps_uc.test_bootloader()
+    
     
     def update_status(self):
         self.stats = eps_uc.get_stats()
