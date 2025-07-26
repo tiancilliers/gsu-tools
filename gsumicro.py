@@ -80,9 +80,9 @@ class GSUMicro:
         if slowfirst:
             self.bus_xfer([data[0]], log=log)
             self.gpio_output(self.micro.nss, 1, log=False)
-            time.sleep(0.01)
+            time.sleep(0.001)
             self.gpio_output(self.micro.nss, 0, log=False)
-            time.sleep(0.01)
+            time.sleep(0.001)
             if len(data) > 1:
                 self.bus_xfer(data[1:], log=log)
         else:
@@ -95,9 +95,9 @@ class GSUMicro:
         self.bus_xfer([0x00], log=log)
         if slowfirst:
             self.gpio_output(self.micro.nss, 1, log=False)
-            time.sleep(0.01)
+            time.sleep(0.001)
             self.gpio_output(self.micro.nss, 0, log=False)
-            time.sleep(0.01)
+            time.sleep(0.001)
         iter = 0
         while (res := self.bus_xfer([0x00], log=log)[0]) not in [0x79, 0x1F]:
             iter += 1
@@ -182,27 +182,30 @@ class EPSMicro(GSUMicro):
         self.send_cmd([0x00, 0x00], log=log, slowfirst=True)
         self.get_ack(slowfirst=True, log=log, timeout=100)
         self.send_cmd([0x00, 0x01], log=log, slowfirst=True)
-        time.sleep(0.01)
+        time.sleep(2)
         self.get_ack(slowfirst=True, log=log, timeout=100)
 
-        blocks = [binary[i:i+256] for i in range(0, len(binary), 256)]
-        blocks[-1] += b'\xFF' * (256 - len(blocks[-1]))
-        addresses = [base_address + i * 256 for i in range(len(blocks))]
+        bs = 64
+        blocks = [binary[i:i+bs] for i in range(0, len(binary), bs)]
+        blocks[-1] += b'\xFF' * (bs - len(blocks[-1]))
+        addresses = [base_address + i * bs for i in range(len(blocks))]
 
         for block, address in track(zip(blocks, addresses), total=len(blocks), description="Uploading..."):
-            self.send_cmd([0x31], sof=True, log=log, slowfirst=True)
-            self.get_ack(slowfirst=True, log=log, timeout=100)
-            self.send_cmd([address >> (24-i*8) & 0xFF for i in range(4)], log=log, slowfirst=True)
-            self.get_ack(slowfirst=True, log=log, timeout=100)
-            self.send_cmd([0xFF] + list(block), log=False, slowfirst=True)
+            self.send_cmd([0x31], sof=True, log=False, slowfirst=True)
+            self.get_ack(slowfirst=True, log=False, timeout=100)
+            self.send_cmd([address >> (24-i*8) & 0xFF for i in range(4)], log=False, slowfirst=True)
+            #time.sleep(0.01)
+            self.get_ack(slowfirst=True, log=False, timeout=100)
+            self.send_cmd([bs-1] + list(block), log=False, slowfirst=True)
+            #console.log('sent block')
             time.sleep(0.01)
-            self.get_ack(slowfirst=True, log=log, timeout=100)
+            self.get_ack(slowfirst=True, log=False, timeout=100)
     
-        self.send_cmd([0x21], sof=True, log=log, slowfirst=True)
-        self.get_ack(slowfirst=True, log=log, timeout=100)
-        self.send_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)], log=log, slowfirst=True)
-        time.sleep(0.01)
-        self.get_ack(slowfirst=True, log=log, timeout=100)
+        #self.send_cmd([0x21], sof=True, log=log, slowfirst=True)
+        #self.get_ack(slowfirst=True, log=log, timeout=100)
+        #self.send_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)], log=log, slowfirst=True)
+        #time.sleep(1.0)
+        #self.get_ack(slowfirst=True, log=log, timeout=100)
     
     def read_all(self, log=False):
         self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
