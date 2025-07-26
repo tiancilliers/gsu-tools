@@ -176,6 +176,31 @@ class EPSMicro(GSUMicro):
         self.send_cmd([len(data), addr] + data, slowfirst=True, log=log)
         self.get_ack(slowfirst=True, log=log, timeout=100)
     
+    def update_firmware_ota(self, binary, log=True, base_address=0x08000000):
+        self.send_cmd([0x44], sof=True, log=log, slowfirst=True)
+        self.get_ack(slowfirst=True, log=log, timeout=100)
+        self.send_cmd([0x00, 0x00], log=log, slowfirst=True)
+        self.get_ack(slowfirst=True, log=log, timeout=100)
+        self.send_cmd([0x00, 0x00], log=log, slowfirst=True)
+        self.get_ack(slowfirst=True, log=log, timeout=100)
+
+        blocks = [binary[i:i+256] for i in range(0, len(binary), 256)]
+        blocks[-1] += b'\xFF' * (256 - len(blocks[-1]))
+        addresses = [base_address + i * 256 for i in range(len(blocks))]
+
+        for block, address in track(zip(blocks, addresses), total=len(blocks), description="Uploading..."):
+            self.send_cmd([0x31], sof=True, log=log, slowfirst=True)
+            self.get_ack(slowfirst=True, log=log, timeout=100)
+            self.send_cmd([address >> (24-i*8) & 0xFF for i in range(4)], log=log, slowfirst=True)
+            self.get_ack(slowfirst=True, log=log, timeout=100)
+            self.send_cmd([0xFF] + list(block), log=False, slowfirst=True)
+            self.get_ack(slowfirst=True, log=log, timeout=100)
+    
+        self.send_cmd([0x21], sof=True, log=log, slowfirst=True)
+        self.get_ack(slowfirst=True, log=log, timeout=100)
+        self.send_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)], log=log, slowfirst=True)
+        self.get_ack(slowfirst=True, log=log, timeout=100)
+    
     def read_all(self, log=False):
         self.send_cmd([0x02], log=log, sof=True, slowfirst=True)
         time.sleep(0.01)
@@ -202,9 +227,9 @@ class EPSMicro(GSUMicro):
             "RAW": {
                 "voltage": 0.004*bytes_read_int16_2s(data[EPSReg.REG_RAW_V.value], data[EPSReg.REG_RAW_V.value+1]),
                 "current": 0.0005*bytes_read_int16_2s(data[EPSReg.REG_RAW_I.value], data[EPSReg.REG_RAW_I.value+1])
-            },
-            "BOOTL": {
-                "req": data[0x30],
-                "ack": data[0x31]
-            }
+            }#,
+            #"BOOTL": {
+            #    "req": data[0x30],
+            #    "ack": data[0x31]
+            #}
         }
