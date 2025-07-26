@@ -181,7 +181,8 @@ class EPSMicro(GSUMicro):
         self.get_ack(slowfirst=True, log=log, timeout=100)
         self.send_cmd([0x00, 0x00], log=log, slowfirst=True)
         self.get_ack(slowfirst=True, log=log, timeout=100)
-        self.send_cmd([0x00, 0x00], log=log, slowfirst=True)
+        self.send_cmd([0x00, 0x01], log=log, slowfirst=True)
+        time.sleep(0.01)
         self.get_ack(slowfirst=True, log=log, timeout=100)
 
         blocks = [binary[i:i+256] for i in range(0, len(binary), 256)]
@@ -194,11 +195,13 @@ class EPSMicro(GSUMicro):
             self.send_cmd([address >> (24-i*8) & 0xFF for i in range(4)], log=log, slowfirst=True)
             self.get_ack(slowfirst=True, log=log, timeout=100)
             self.send_cmd([0xFF] + list(block), log=False, slowfirst=True)
+            time.sleep(0.01)
             self.get_ack(slowfirst=True, log=log, timeout=100)
     
         self.send_cmd([0x21], sof=True, log=log, slowfirst=True)
         self.get_ack(slowfirst=True, log=log, timeout=100)
         self.send_cmd([base_address >> (24-i*8) & 0xFF for i in range(4)], log=log, slowfirst=True)
+        time.sleep(0.01)
         self.get_ack(slowfirst=True, log=log, timeout=100)
     
     def read_all(self, log=False):

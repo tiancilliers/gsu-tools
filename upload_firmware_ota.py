@@ -14,7 +14,7 @@ spi_bus = spidev.SpiDev()
 spi_bus.open(0, 0)
 spi_bus.max_speed_hz = 400000
 
-eps_uc = gsumicro.GSUMicro(spi_bus, gsumicro.EPSPins)
+eps_uc = gsumicro.EPSMicro(spi_bus)
 time.sleep(0.1)
 
 
