@@ -35,6 +35,9 @@ def dashboard():
 @app.route('/action', methods=['POST'])
 def action():
     data = request.json
+    if not data:
+        # Fallback for htmx form-encoded POST
+        data = request.form
     btn = data.get('button')
     if btn == "cfg_vsys":
         eps_cfg.toggle_pin(gsuconfig.EPSConfig.VSYS)
