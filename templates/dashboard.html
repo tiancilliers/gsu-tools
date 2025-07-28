@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPS Dashboard Web</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-2">EPS Dashboard</h1>
+    <div id="log" class="border p-2 mb-2 h-32 overflow-y-auto bg-white"></div>
+    <div class="flex gap-2 mb-2">
+      <button class="btn" hx-post="/action" hx-vals='{"button":"cfg_vsys"}' hx-trigger="click" hx-swap="none">VSYS</button>
+      <button class="btn" hx-post="/action" hx-vals='{"button":"cfg_5v"}' hx-trigger="click" hx-swap="none">5V EF</button>
+      <button class="btn" hx-post="/action" hx-vals='{"button":"cfg_3v3"}' hx-trigger="click" hx-swap="none">3V3 EF</button>
+      <button class="btn" hx-post="/action" hx-vals='{"button":"cfg_raw"}' hx-trigger="click" hx-swap="none">RAW EF</button>
+    </div>
+    <div class="flex gap-2 mb-2">
+      <button class="btn" hx-post="/action" hx-vals='{"button":"cmd_rst"}' hx-trigger="click" hx-swap="none">RESET</button>
+      <button class="btn" hx-post="/action" hx-vals='{"button":"cmd_5v"}' hx-trigger="click" hx-swap="none">5V REG ON</button>
+      <button class="btn" hx-post="/action" hx-vals='{"button":"cmd_3v3"}' hx-trigger="click" hx-swap="none">3V3 REG ON</button>
+      <button class="btn" hx-post="/action" hx-vals='{"button":"cmd_led"}' hx-trigger="click" hx-swap="none">LED ON</button>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-bold mb-2">3V3 REGULATOR</h2>
+        <div>Voltage: <span id="l3v3_v">-</span> V</div>
+        <div>Current: <span id="l3v3_i">-</span> A</div>
+      </div>
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-bold mb-2">5V0 REGULATOR</h2>
+        <div>Voltage: <span id="l5v_v">-</span> V</div>
+        <div>Current: <span id="l5v_i">-</span> A</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const socket = io();
+    socket.on('status', function(stats) {
+      if(stats["3V3"]) {
+        document.getElementById('l3v3_v').textContent = stats["3V3"].voltage.toFixed(3);
+        document.getElementById('l3v3_i').textContent = stats["3V3"].current.toFixed(3);
+      }
+      if(stats["5V"]) {
+        document.getElementById('l5v_v').textContent = stats["5V"].voltage.toFixed(3);
+        document.getElementById('l5v_i').textContent = stats["5V"].current.toFixed(3);
+      }
+    });
+  </script>
+</body>
+</html>
