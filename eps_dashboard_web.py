@@ -29,19 +29,19 @@ def update_and_emit_status():
     global status
     with eps_uc_lock:
         status = eps_uc.get_stats()
-        # Add EF and REG state info for toggles
-        efuse_state = {
-            '3v3': bool(eps_cfg.state[1] & (1 << 0)),  # REG_3V3_EF
-            '5v': bool(eps_cfg.state[1] & (1 << 1)),   # REG_5V_EF
-            'raw': bool(eps_cfg.state[1] & (1 << 4)),  # RAW_PIN_BUS
-        }
-        reg_state = {
-            '3v3': status.get('3V3', {}).get('state', False),
-            '5v': status.get('5V', {}).get('state', False),
-        }
-        status['efuse'] = efuse_state
-        status['reg'] = reg_state
-        socketio.emit('status', status)
+    # Add EF and REG state info for toggles
+    efuse_state = {
+        '3v3': bool(eps_cfg.state[1] & (1 << 0)),  # REG_3V3_EF
+        '5v': bool(eps_cfg.state[1] & (1 << 1)),   # REG_5V_EF
+        'raw': bool(eps_cfg.state[1] & (1 << 4)),  # RAW_PIN_BUS
+    }
+    reg_state = {
+        '3v3': status.get('3V3', {}).get('state', False),
+        '5v': status.get('5V', {}).get('state', False),
+    }
+    status['efuse'] = efuse_state
+    status['reg'] = reg_state
+    socketio.emit('status', status)
 
 def poll_status():
     while True:
@@ -89,8 +89,7 @@ def action():
 
 @socketio.on('connect')
 def handle_connect():
-    with eps_uc_lock:
-        update_and_emit_status()
+    update_and_emit_status()
 
 if __name__ == '__main__':
     t = threading.Thread(target=poll_status, daemon=True)
