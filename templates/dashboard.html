@@ -14,45 +14,95 @@
     <div class="mb-4">
       <div class="border border-indigo-200 rounded-xl bg-white shadow p-0">
         <div class="font-bold text-indigo-700 text-lg px-6 pt-4 pb-2">Log</div>
-        <div id="log" class="text-xs text-gray-700 px-6 pb-4 h-32 overflow-y-auto"></div>
+        <div id="log" class="text-xs text-gray-700 px-6 pb-4 h-32 overflow-y-auto font-mono whitespace-pre-line"></div>
       </div>
     </div>
-    <div class="grid grid-cols-2 gap-3 mb-4 w-full">
+    <div class="grid grid-cols-4 gap-3 mb-4 w-full">
       <button class="w-full px-4 py-3 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow transition border border-indigo-600" hx-post="/action" hx-vals='{"button":"cfg_vsys"}' hx-trigger="click" hx-swap="none" hx-headers='{"Accept":"application/json"}'>VSYS</button>
       <button class="w-full px-4 py-3 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow transition border border-indigo-600" hx-post="/action" hx-vals='{"button":"cfg_5v"}' hx-trigger="click" hx-swap="none" hx-headers='{"Accept":"application/json"}'>5V EF</button>
       <button class="w-full px-4 py-3 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow transition border border-indigo-600" hx-post="/action" hx-vals='{"button":"cfg_3v3"}' hx-trigger="click" hx-swap="none" hx-headers='{"Accept":"application/json"}'>3V3 EF</button>
       <button class="w-full px-4 py-3 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow transition border border-indigo-600" hx-post="/action" hx-vals='{"button":"cfg_raw"}' hx-trigger="click" hx-swap="none" hx-headers='{"Accept":"application/json"}'>RAW EF</button>
     </div>
-    <div class="grid grid-cols-2 gap-3 mb-6 w-full">
+    <div class="grid grid-cols-4 gap-3 mb-6 w-full">
       <button class="w-full px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow transition border border-indigo-700" hx-post="/action" hx-vals='{"button":"cmd_rst"}' hx-trigger="click" hx-swap="none" hx-headers='{"Accept":"application/json"}'>RESET</button>
       <button class="w-full px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow transition border border-indigo-700" hx-post="/action" hx-vals='{"button":"cmd_5v"}' hx-trigger="click" hx-swap="none" hx-headers='{"Accept":"application/json"}'>5V REG ON</button>
       <button class="w-full px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow transition border border-indigo-700" hx-post="/action" hx-vals='{"button":"cmd_3v3"}' hx-trigger="click" hx-swap="none" hx-headers='{"Accept":"application/json"}'>3V3 REG ON</button>
       <button class="w-full px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow transition border border-indigo-700" hx-post="/action" hx-vals='{"button":"cmd_led"}' hx-trigger="click" hx-swap="none" hx-headers='{"Accept":"application/json"}'>LED ON</button>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <div class="bg-white p-6 rounded-xl shadow border border-indigo-200">
-        <h2 class="font-bold mb-2 text-indigo-700 text-lg">3V3 REGULATOR</h2>
+        <h2 class="font-bold mb-2 text-indigo-700 text-lg">3.3V Regulator</h2>
         <div class="mb-1 text-gray-700">Voltage: <span id="l3v3_v" class="font-mono text-indigo-600">-</span> V</div>
         <div class="text-gray-700">Current: <span id="l3v3_i" class="font-mono text-indigo-600">-</span> A</div>
+        <canvas id="chart3v3" height="60"></canvas>
       </div>
       <div class="bg-white p-6 rounded-xl shadow border border-blue-200">
-        <h2 class="font-bold mb-2 text-blue-700 text-lg">5V0 REGULATOR</h2>
+        <h2 class="font-bold mb-2 text-blue-700 text-lg">5V Regulator</h2>
         <div class="mb-1 text-gray-700">Voltage: <span id="l5v_v" class="font-mono text-blue-600">-</span> V</div>
         <div class="text-gray-700">Current: <span id="l5v_i" class="font-mono text-blue-600">-</span> A</div>
+        <canvas id="chart5v" height="60"></canvas>
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script>
+    // Minimalist chart config
+    const chartOptions = {
+      responsive: true,
+      animation: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: {
+        x: { display: false },
+        y: {
+          min: 0, max: 5.2,
+          display: false,
+          grid: { display: false },
+        }
+      }
+    };
+    const N = 150; // 30s at 5Hz
+    let data3v3 = Array(N).fill(0);
+    let data5v = Array(N).fill(0);
+    const ctx3v3 = document.getElementById('chart3v3').getContext('2d');
+    const ctx5v = document.getElementById('chart5v').getContext('2d');
+    const chart3v3 = new Chart(ctx3v3, {
+      type: 'line',
+      data: { labels: Array(N).fill(''), datasets: [{ data: data3v3, borderColor: '#6366f1', borderWidth: 2, pointRadius: 0, fill: false }] },
+      options: chartOptions
+    });
+    const chart5v = new Chart(ctx5v, {
+      type: 'line',
+      data: { labels: Array(N).fill(''), datasets: [{ data: data5v, borderColor: '#2563eb', borderWidth: 2, pointRadius: 0, fill: false }] },
+      options: chartOptions
+    });
+    // Log buffer
+    const logElem = document.getElementById('log');
+    let logLines = [];
+    const MAX_LOG = 100;
+    function addLog(line) {
+      logLines.push(line);
+      if (logLines.length > MAX_LOG) logLines.shift();
+      logElem.textContent = logLines.join('\n');
+      logElem.scrollTop = logElem.scrollHeight;
+    }
+    // SocketIO status and log
     const socket = io();
     socket.on('status', function(stats) {
       if(stats["3V3"]) {
         document.getElementById('l3v3_v').textContent = stats["3V3"].voltage.toFixed(3);
         document.getElementById('l3v3_i').textContent = stats["3V3"].current.toFixed(3);
+        data3v3.push(stats["3V3"].voltage); data3v3.shift();
+        chart3v3.update('none');
       }
       if(stats["5V"]) {
         document.getElementById('l5v_v').textContent = stats["5V"].voltage.toFixed(3);
         document.getElementById('l5v_i').textContent = stats["5V"].current.toFixed(3);
+        data5v.push(stats["5V"].voltage); data5v.shift();
+        chart5v.update('none');
       }
+    });
+    socket.on('log', function(line) {
+      addLog(line);
     });
   </script>
 </body>

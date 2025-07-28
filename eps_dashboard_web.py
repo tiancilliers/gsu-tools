@@ -28,6 +28,12 @@ def poll_status():
         socketio.emit('status', stats)
         time.sleep(0.2)
 
+def emit_log(text):
+    socketio.emit('log', text)
+
+eps_cfg.set_displayfn(emit_log)
+eps_uc.set_displayfn(emit_log)
+
 @app.route('/')
 def dashboard():
     return render_template('dashboard.html')
