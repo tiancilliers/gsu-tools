@@ -20,7 +20,10 @@ spi_bus.open(0, 0)
 spi_bus.max_speed_hz = 400000
 eps_uc = gsumicro.EPSMicro(spi_bus)
 
+time.sleep(0.1)
+
 status = {}
+eps_uc_lock = threading.Lock()
 
 def poll_status():
     while True:
@@ -48,22 +51,23 @@ def action():
         except Exception:
             data = {}
     btn = data.get('button')
-    if btn == "cfg_vsys":
-        eps_cfg.toggle_pin(gsuconfig.EPSConfig.VSYS)
-    elif btn == "cfg_5v":
-        eps_cfg.toggle_pin(gsuconfig.EPSConfig.REG_5V_EF)
-    elif btn == "cfg_3v3":
-        eps_cfg.toggle_pin(gsuconfig.EPSConfig.REG_3V3_EF)
-    elif btn == "cfg_raw":
-        eps_cfg.toggle_pin(gsuconfig.EPSConfig.RAW_PIN_BUS)
-    elif btn == "cmd_rst":
-        eps_uc.reset()
-    elif btn == "cmd_5v":
-        eps_uc.write_regs(gsumicro.EPSReg.REG_5V_STATE, [0x00 if status.get("5V", {}).get("state") else 0x01])
-    elif btn == "cmd_3v3":
-        eps_uc.write_regs(gsumicro.EPSReg.REG_3V3_STATE, [0x00 if status.get("3V3", {}).get("state") else 0x01])
-    elif btn == "cmd_led":
-        eps_uc.write_regs(gsumicro.EPSReg.REG_LED_STATE, [0x01])
+    with eps_uc_lock:
+        if btn == "cfg_vsys":
+            eps_cfg.toggle_pin(gsuconfig.EPSConfig.VSYS)
+        elif btn == "cfg_5v":
+            eps_cfg.toggle_pin(gsuconfig.EPSConfig.REG_5V_EF)
+        elif btn == "cfg_3v3":
+            eps_cfg.toggle_pin(gsuconfig.EPSConfig.REG_3V3_EF)
+        elif btn == "cfg_raw":
+            eps_cfg.toggle_pin(gsuconfig.EPSConfig.RAW_PIN_BUS)
+        elif btn == "cmd_rst":
+            eps_uc.reset()
+        elif btn == "cmd_5v":
+            eps_uc.write_regs(gsumicro.EPSReg.REG_5V_STATE, [0x00 if status.get("5V", {}).get("state") else 0x01])
+        elif btn == "cmd_3v3":
+            eps_uc.write_regs(gsumicro.EPSReg.REG_3V3_STATE, [0x00 if status.get("3V3", {}).get("state") else 0x01])
+        elif btn == "cmd_led":
+            eps_uc.write_regs(gsumicro.EPSReg.REG_LED_STATE, [0x01])
     return jsonify(success=True)
 
 @socketio.on('connect')

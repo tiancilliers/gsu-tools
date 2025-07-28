@@ -33,14 +33,18 @@
       <div class="bg-white p-6 rounded-xl shadow border border-indigo-200">
         <h2 class="font-bold mb-2 text-indigo-700 text-lg">3.3V Regulator</h2>
         <div class="mb-1 text-gray-700">Voltage: <span id="l3v3_v" class="font-mono text-indigo-600">-</span> V</div>
-        <div class="text-gray-700">Current: <span id="l3v3_i" class="font-mono text-indigo-600">-</span> A</div>
-        <canvas id="chart3v3" height="60"></canvas>
+        <div class="text-gray-700">Current: <span id="l3v3_i" class="font-mono text-red-600">-</span> A</div>
+        <div class="border border-indigo-100 rounded-lg p-2 bg-indigo-50">
+          <canvas id="chart3v3" height="60"></canvas>
+        </div>
       </div>
       <div class="bg-white p-6 rounded-xl shadow border border-blue-200">
         <h2 class="font-bold mb-2 text-blue-700 text-lg">5V Regulator</h2>
         <div class="mb-1 text-gray-700">Voltage: <span id="l5v_v" class="font-mono text-blue-600">-</span> V</div>
-        <div class="text-gray-700">Current: <span id="l5v_i" class="font-mono text-blue-600">-</span> A</div>
-        <canvas id="chart5v" height="60"></canvas>
+        <div class="text-gray-700">Current: <span id="l5v_i" class="font-mono text-red-600">-</span> A</div>
+        <div class="border border-blue-100 rounded-lg p-2 bg-blue-50">
+          <canvas id="chart5v" height="60"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -62,17 +66,31 @@
     };
     const N = 150; // 30s at 5Hz
     let data3v3 = Array(N).fill(0);
+    let data3v3i = Array(N).fill(0);
     let data5v = Array(N).fill(0);
+    let data5vi = Array(N).fill(0);
     const ctx3v3 = document.getElementById('chart3v3').getContext('2d');
     const ctx5v = document.getElementById('chart5v').getContext('2d');
     const chart3v3 = new Chart(ctx3v3, {
       type: 'line',
-      data: { labels: Array(N).fill(''), datasets: [{ data: data3v3, borderColor: '#6366f1', borderWidth: 2, pointRadius: 0, fill: false }] },
+      data: {
+        labels: Array(N).fill(''),
+        datasets: [
+          { data: data3v3, borderColor: '#6366f1', borderWidth: 2, pointRadius: 0, fill: false, label: 'Voltage' },
+          { data: data3v3i, borderColor: '#dc2626', borderWidth: 2, pointRadius: 0, fill: false, label: 'Current', yAxisID: 'y' }
+        ]
+      },
       options: chartOptions
     });
     const chart5v = new Chart(ctx5v, {
       type: 'line',
-      data: { labels: Array(N).fill(''), datasets: [{ data: data5v, borderColor: '#2563eb', borderWidth: 2, pointRadius: 0, fill: false }] },
+      data: {
+        labels: Array(N).fill(''),
+        datasets: [
+          { data: data5v, borderColor: '#2563eb', borderWidth: 2, pointRadius: 0, fill: false, label: 'Voltage' },
+          { data: data5vi, borderColor: '#dc2626', borderWidth: 2, pointRadius: 0, fill: false, label: 'Current', yAxisID: 'y' }
+        ]
+      },
       options: chartOptions
     });
     // Log buffer
@@ -92,12 +110,14 @@
         document.getElementById('l3v3_v').textContent = stats["3V3"].voltage.toFixed(3);
         document.getElementById('l3v3_i').textContent = stats["3V3"].current.toFixed(3);
         data3v3.push(stats["3V3"].voltage); data3v3.shift();
+        data3v3i.push(stats["3V3"].current); data3v3i.shift();
         chart3v3.update('none');
       }
       if(stats["5V"]) {
         document.getElementById('l5v_v').textContent = stats["5V"].voltage.toFixed(3);
         document.getElementById('l5v_i').textContent = stats["5V"].current.toFixed(3);
         data5v.push(stats["5V"].voltage); data5v.shift();
+        data5vi.push(stats["5V"].current); data5vi.shift();
         chart5v.update('none');
       }
     });
