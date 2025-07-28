@@ -31,10 +31,9 @@ def update_and_emit_status():
         status = eps_uc.get_stats()
         # Add EF and REG state info for toggles
         efuse_state = {
-            '3v3': bool(eps_cfg.state[1] & (1 << 0)),
-            '5v': bool(eps_cfg.state[1] & (1 << 1)),
-            'vsys': bool(eps_cfg.state[2] & (1 << 2)),
-            'raw': bool(eps_cfg.state[1] & (1 << 4)),
+            '3v3': bool(eps_cfg.state[1] & (1 << 0)),  # REG_3V3_EF
+            '5v': bool(eps_cfg.state[1] & (1 << 1)),   # REG_5V_EF
+            'raw': bool(eps_cfg.state[1] & (1 << 4)),  # RAW_PIN_BUS
         }
         reg_state = {
             '3v3': status.get('3V3', {}).get('state', False),
