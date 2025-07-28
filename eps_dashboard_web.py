@@ -27,9 +27,22 @@ eps_uc_lock = threading.Lock()
 
 def poll_status():
     while True:
-        stats = eps_uc.get_stats()
-        socketio.emit('status', stats)
         time.sleep(0.2)
+        with eps_uc_lock:
+            stats = eps_uc.get_stats()
+            # Add EF and REG state info for toggles
+            # GSUConfig.state is a list of 3 ints (bitmasks)
+            efuse_state = {
+                '3v3': bool(eps_cfg.state[1] & (1 << 0)),
+                '5v': bool(eps_cfg.state[1] & (1 << 1)),
+            }
+            reg_state = {
+                '3v3': stats.get('3V3', {}).get('state', False),
+                '5v': stats.get('5V', {}).get('state', False),
+            }
+            stats['efuse'] = efuse_state
+            stats['reg'] = reg_state
+            socketio.emit('status', stats)
 
 def emit_log(text):
     socketio.emit('log', text)
@@ -72,7 +85,8 @@ def action():
 
 @socketio.on('connect')
 def handle_connect():
-    emit('status', eps_uc.get_stats())
+    with eps_uc_lock:
+        emit('status', eps_uc.get_stats())
 
 if __name__ == '__main__':
     t = threading.Thread(target=poll_status, daemon=True)
