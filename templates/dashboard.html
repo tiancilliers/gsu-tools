@@ -230,7 +230,7 @@
       setToggle('toggle_5v_ef', stats.efuse && stats.efuse['5v']);
       setToggle('toggle_raw', stats.efuse && stats.efuse['raw']);
       setToggle('toggle_telen', stats.telen);
-      setToggle('toggle_telav', stats.telen);
+      setToggle('toggle_telav', stats.telav);
     });
     socket.on('log', function(line) {
       addLog(line);
