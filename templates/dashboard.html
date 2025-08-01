@@ -196,9 +196,6 @@
     document.getElementById('toggle_raw').addEventListener('change', function() {
       sendToggle('cfg_raw');
     });
-    document.getElementById('toggle_telen').addEventListener('change', function() {
-      sendToggle('cmd_tel');
-    });
     // SocketIO status and log
     const socket = io();
     socket.on('status', function(stats) {
