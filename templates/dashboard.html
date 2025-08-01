@@ -103,22 +103,39 @@
             <span class="text-xs">A</span>
           </div>
         </div>
-        <div class="border border-blue-100 rounded-lg p-2 bg-blue-50 mt-2">
+        <div class="border border-indigo-100 rounded-lg p-2 bg-indigo-50 mt-2">
           <canvas id="chart5v" height="60"></canvas>
         </div>
       </div>
     </div>
     <!-- Telemetry Panel -->
     <div class="mb-4">
-      <div class="border border-indigo-200 rounded-xl bg-white shadow p-0">
-        <div class="font-bold text-indigo-700 text-lg px-6 pt-4 pb-2">Telemetry</div>
-        <div class="px-6 pb-4">
-          <div class="mb-4">
-            <canvas id="chart_telemetry_pt" height="60"></canvas>
+      <div class="bg-white p-6 rounded-xl shadow border border-blue-200">
+        <h2 class="font-bold mb-2 text-blue-700 text-lg">Telemetry</h2>
+        <div class="grid grid-cols-2 gap-x-5 gap-y-1 text-gray-700 mb-2">
+          <div class="flex items-center">
+            <span class="mr-2 text-xs">PRESSURE</span><div class="flex-1 h-2 rounded transition-all"></div>
+            <span id="press" class="font-mono text-blue-600 mx-1">-</span>
+            <span class="text-xs">kPa</span>
           </div>
-          <div>
-            <canvas id="chart_telemetry_power" height="60"></canvas>
+          <div class="flex items-center justify-end">
+            <span class="mr-2 text-xs">TEMPERATURE</span><div class="flex-1 h-2 rounded transition-all"></div>
+            <span id="temp" class="font-mono text-red-600 mx-1">-</span>
+            <span class="text-xs">C</span>
           </div>
+        </div>
+        <div class="border border-indigo-100 rounded-lg p-2 bg-indigo-50 mt-2">
+          <canvas id="chart_telemetry_pt" height="60"></canvas>
+        </div>
+         <div class="grid grid-cols-2 gap-x-5 gap-y-1 text-gray-700 mb-2">
+          <div class="flex items-center">
+            <span class="mr-2 text-xs">POWER</span><div class="flex-1 h-2 rounded transition-all"></div>
+            <span id="power" class="font-mono text-blue-600 mx-1">-</span>
+            <span class="text-xs">W</span>
+          </div>
+        </div>
+        <div class="border border-indigo-100 rounded-lg p-2 bg-indigo-50 mt-2">
+          <canvas id="chart_telemetry_power" height="60"></canvas>
         </div>
       </div>
     </div>
@@ -129,7 +146,7 @@
     const chartOptions = {
       responsive: true,
       animation: false,
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      plugins: { legend: { display: false }, tooltip: { enabled: true } },
       scales: {
         x: { display: false },
         y: {
@@ -168,7 +185,7 @@
       data: {
         labels: Array(N).fill(''),
         datasets: [
-          { data: data5v, borderColor: '#2563eb', borderWidth: 2, pointRadius: 0, fill: false, label: 'Voltage' },
+          { data: data5v, borderColor: '#6366f1', borderWidth: 2, pointRadius: 0, fill: false, label: 'Voltage' },
           { data: data5vi, borderColor: '#dc2626', borderWidth: 2, pointRadius: 0, fill: false, label: 'Current', yAxisID: 'y1' }
         ]
       },
@@ -198,32 +215,11 @@
       data: {
         labels: Array(TELEMETRY_LEN).fill(''),
         datasets: [
-          { data: data_press, borderColor: '#0ea5e9', borderWidth: 2, pointRadius: 0, fill: false, label: 'Pressure', yAxisID: 'y' },
-          { data: data_temp, borderColor: '#f59e42', borderWidth: 2, pointRadius: 0, fill: false, label: 'Temperature', yAxisID: 'y1' }
+          { data: data_press, borderColor: '#6366f1', borderWidth: 2, pointRadius: 0, fill: false, label: 'Pressure', yAxisID: 'y' },
+          { data: data_temp, borderColor: '#dc2626', borderWidth: 2, pointRadius: 0, fill: false, label: 'Temperature', yAxisID: 'y1' }
         ]
       },
-      options: {
-        responsive: true,
-        animation: false,
-        plugins: {
-          legend: { display: true },
-          tooltip: { enabled: true },
-        },
-        scales: {
-          x: { display: false },
-          y: {
-            min: 0, max: 120,
-            title: { display: true, text: 'Pressure (kPa)' },
-            grid: { display: false },
-          },
-          y1: {
-            min: -40, max: 100,
-            title: { display: true, text: 'Temperature (°C)' },
-            grid: { display: false },
-            position: 'right'
-          }
-        }
-      }
+      options: chartOptions
     });
     const ctxPower = document.getElementById('chart_telemetry_power').getContext('2d');
     const chartPower = new Chart(ctxPower, {
@@ -234,22 +230,7 @@
           { data: data_power, borderColor: '#6366f1', borderWidth: 2, pointRadius: 0, fill: false, label: 'Power (W)' }
         ]
       },
-      options: {
-        responsive: true,
-        animation: false,
-        plugins: {
-          legend: { display: true },
-          tooltip: { enabled: true },
-        },
-        scales: {
-          x: { display: false },
-          y: {
-            min: 0, max: 100,
-            title: { display: true, text: 'Power (W)' },
-            grid: { display: false },
-          }
-        }
-      }
+      options: chartOptions
     });
     // Log buffer
     const logElem = document.getElementById('log');
@@ -322,6 +303,13 @@
         }
         chartPT.data.datasets[0].data = data_press;
         chartPT.data.datasets[1].data = data_temp;
+        // Show last telemetry sample if available
+        const lastTelemetry = stats.telemetry[stats.telemetry.length - 1];
+        if (lastTelemetry) {
+          document.getElementById('press').textContent = lastTelemetry[0].toFixed(3);
+          document.getElementById('temp').textContent = lastTelemetry[1].toFixed(3);
+          document.getElementById('power').textContent = lastTelemetry[2].toFixed(3);
+        }
         chartPT.update('none');
         chartPower.data.datasets[0].data = data_power;
         chartPower.update('none');
