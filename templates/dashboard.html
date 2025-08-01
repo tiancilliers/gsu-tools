@@ -219,7 +219,25 @@
           { data: data_temp, borderColor: '#dc2626', borderWidth: 2, pointRadius: 0, fill: false, label: 'Temperature', yAxisID: 'y1' }
         ]
       },
-      options: chartOptions
+      options: {
+        responsive: true,
+        animation: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: true } },
+        scales: {
+          x: { display: false },
+          y: {
+            min: 0, max: 655,
+            display: false,
+            grid: { display: false },
+          },
+          y1: {
+            min: -20, max: 60,
+            display: false,
+            grid: { display: false },
+            position: 'right'
+          }
+        }
+      }
     });
     const ctxPower = document.getElementById('chart_telemetry_power').getContext('2d');
     const chartPower = new Chart(ctxPower, {
@@ -230,7 +248,19 @@
           { data: data_power, borderColor: '#6366f1', borderWidth: 2, pointRadius: 0, fill: false, label: 'Power (W)' }
         ]
       },
-      options: chartOptions
+        options: {
+        responsive: true,
+        animation: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: true } },
+        scales: {
+          x: { display: false },
+          y: {
+            min: 0, max: 6,
+            display: false,
+            grid: { display: false },
+          }
+        }
+      }
     });
     // Log buffer
     const logElem = document.getElementById('log');
