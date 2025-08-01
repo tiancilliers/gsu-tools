@@ -226,7 +226,8 @@ class EPSMicro(GSUMicro):
         time.sleep(BYTE_TIME)
         data = self.bus_xfer([0x00] * 1024, log=False)
         self.gpio_output(self.micro.nss, 1, log=False)
-        return [((data[i]<<8) + data[i+1], (data[i+2]<<8) + data[i+3], (data[i+4]<<8) + data[i+5], (data[i+6]<<8) + data[i+7]) for i in range(0, 1024, 8)]
+        bits = lambda x: [x & (1 << i) != 0 for i in range(16)]
+        return [[((data[i]<<8) + data[i+1])*0.01, ((data[i+2]<<8) + data[i+3])*0.01-273.15, ((data[i+4]<<8) + data[i+5])*0.001, bits((data[i+6]<<8) + data[i+7])] for i in range(0, 1024, 8)]
 
     def get_stats(self):
         data = self.read_all()

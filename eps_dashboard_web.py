@@ -46,6 +46,7 @@ def update_and_emit_status():
     status['efuse'] = efuse_state
     status['reg'] = reg_state
     status['telav'] = status.get('TEL_AVAIL', False)
+    status['telemetry'] = status.get('TELEMETRY', [])
     socketio.emit('status', status)
 
 def poll_status():

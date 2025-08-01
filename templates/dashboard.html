@@ -108,8 +108,23 @@
         </div>
       </div>
     </div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script>
+    <!-- Telemetry Panel -->
+    <div class="mb-4">
+      <div class="border border-indigo-200 rounded-xl bg-white shadow p-0">
+        <div class="font-bold text-indigo-700 text-lg px-6 pt-4 pb-2">Telemetry</div>
+        <div class="px-6 pb-4">
+          <div class="mb-4">
+            <canvas id="chart_telemetry_pt" height="60"></canvas>
+          </div>
+          <div>
+            <canvas id="chart_telemetry_power" height="60"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Telemetry Panel -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
     // Minimalist chart config
     const chartOptions = {
       responsive: true,
@@ -158,6 +173,83 @@
         ]
       },
       options: chartOptions
+    });
+    // --- Telemetry charts ---
+    let TELEMETRY_LEN = 2000;
+    window.setTelemetryLength = function(n) {
+      TELEMETRY_LEN = n;
+      data_press = Array(TELEMETRY_LEN).fill(0);
+      data_temp = Array(TELEMETRY_LEN).fill(0);
+      data_power = Array(TELEMETRY_LEN).fill(0);
+      chartPT.data.labels = Array(TELEMETRY_LEN).fill('');
+      chartPT.data.datasets[0].data = data_press;
+      chartPT.data.datasets[1].data = data_temp;
+      chartPT.update('none');
+      chartPower.data.labels = Array(TELEMETRY_LEN).fill('');
+      chartPower.data.datasets[0].data = data_power;
+      chartPower.update('none');
+    }
+    let data_press = Array(TELEMETRY_LEN).fill(0);
+    let data_temp = Array(TELEMETRY_LEN).fill(0);
+    let data_power = Array(TELEMETRY_LEN).fill(0);
+    const ctxPT = document.getElementById('chart_telemetry_pt').getContext('2d');
+    const chartPT = new Chart(ctxPT, {
+      type: 'line',
+      data: {
+        labels: Array(TELEMETRY_LEN).fill(''),
+        datasets: [
+          { data: data_press, borderColor: '#0ea5e9', borderWidth: 2, pointRadius: 0, fill: false, label: 'Pressure', yAxisID: 'y' },
+          { data: data_temp, borderColor: '#f59e42', borderWidth: 2, pointRadius: 0, fill: false, label: 'Temperature', yAxisID: 'y1' }
+        ]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        plugins: {
+          legend: { display: true },
+          tooltip: { enabled: true },
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            min: 0, max: 120,
+            title: { display: true, text: 'Pressure (kPa)' },
+            grid: { display: false },
+          },
+          y1: {
+            min: -40, max: 100,
+            title: { display: true, text: 'Temperature (°C)' },
+            grid: { display: false },
+            position: 'right'
+          }
+        }
+      }
+    });
+    const ctxPower = document.getElementById('chart_telemetry_power').getContext('2d');
+    const chartPower = new Chart(ctxPower, {
+      type: 'line',
+      data: {
+        labels: Array(TELEMETRY_LEN).fill(''),
+        datasets: [
+          { data: data_power, borderColor: '#6366f1', borderWidth: 2, pointRadius: 0, fill: false, label: 'Power (W)' }
+        ]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        plugins: {
+          legend: { display: true },
+          tooltip: { enabled: true },
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            min: 0, max: 100,
+            title: { display: true, text: 'Power (W)' },
+            grid: { display: false },
+          }
+        }
+      }
     });
     // Log buffer
     const logElem = document.getElementById('log');
@@ -219,10 +311,25 @@
       setToggle('toggle_5v_ef', stats.efuse && stats.efuse['5v']);
       setToggle('toggle_raw', stats.efuse && stats.efuse['raw']);
       setToggle('toggle_telav', stats.telav);
+      // --- Telemetry update ---
+      if(stats.telemetry && Array.isArray(stats.telemetry) && stats.telemetry.length > 0) {
+        // Shift in new samples, one at a time, to maintain a rolling window
+        for (let i = 0; i < stats.telemetry.length; ++i) {
+          const x = stats.telemetry[i];
+          data_press.push(x[0]); data_press.shift();
+          data_temp.push(x[1]); data_temp.shift();
+          data_power.push(x[2]); data_power.shift();
+        }
+        chartPT.data.datasets[0].data = data_press;
+        chartPT.data.datasets[1].data = data_temp;
+        chartPT.update('none');
+        chartPower.data.datasets[0].data = data_power;
+        chartPower.update('none');
+      }
     });
     socket.on('log', function(line) {
       addLog(line);
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
