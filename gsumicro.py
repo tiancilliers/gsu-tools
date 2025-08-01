@@ -216,9 +216,21 @@ class EPSMicro(GSUMicro):
         time.sleep(0.01)
         self.get_ack(slowfirst=True, log=log, timeout=100)
         return ret
+    
+    def read_telemetry(self):
+        self.send_cmd([0x50], log=True, sof=True, slowfirst=True)
+        time.sleep(0.01)
+        self.get_ack(slowfirst=True, log=True, timeout=100)
+        time.sleep(0.01)
+        self.gpio_output(self.micro.nss, 0, log=False)
+        time.sleep(BYTE_TIME)
+        data = self.bus_xfer([0x00] * 1024, log=False)
+        self.gpio_output(self.micro.nss, 1, log=False)
+        return [((data[i]<<8) + data[i+1], (data[i+2]<<8) + data[i+3], (data[i+4]<<8) + data[i+5], (data[i+6]<<8) + data[i+7]) for i in range(0, 1024, 8)]
 
     def get_stats(self):
         data = self.read_all()
+        telemetry = self.read_telemetry() if data[0x2E] in [0x01, 0x02] else []
         return {
             "3V3": {
                 "state": data[EPSReg.REG_3V3_STATE.value],
@@ -235,5 +247,5 @@ class EPSMicro(GSUMicro):
                 "current": 0.0005*bytes_read_int16_2s(data[EPSReg.REG_RAW_I.value], data[EPSReg.REG_RAW_I.value+1])
             },
             "TEL_AVAIL": data[0x2E] != 0x00,
-            "TEL_ENABLE": data[0x2F] != 0x00
+            "TELEMETRY": telemetry
         }

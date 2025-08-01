@@ -29,14 +29,6 @@
           </label>
         </div>
         <div class="flex items-center justify-end px-6 pb-4 text-gray-700">
-          <span class="mr-2 text-xs">TELEMETRY RECORDING</span><div class="flex-1 h-2 rounded transition-all"></div>
-          <label class="flex items-center cursor-pointer select-none">
-            <input type="checkbox" id="toggle_telen" class="sr-only peer"/>
-            <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-500 transition-all relative">
-            </div>
-          </label>
-        </div>
-        <div class="flex items-center justify-end px-6 pb-4 text-gray-700">
           <span class="mr-2 text-xs">TELEMETRY AVAILABLE</span><div class="flex-1 h-2 rounded transition-all"></div>
           <label class="flex items-center cursor-pointer select-none">
             <input type="checkbox" id="toggle_telav" class="sr-only peer"/>
@@ -229,7 +221,6 @@
       setToggle('toggle_3v3_ef', stats.efuse && stats.efuse['3v3']);
       setToggle('toggle_5v_ef', stats.efuse && stats.efuse['5v']);
       setToggle('toggle_raw', stats.efuse && stats.efuse['raw']);
-      setToggle('toggle_telen', stats.telen);
       setToggle('toggle_telav', stats.telav);
     });
     socket.on('log', function(line) {
