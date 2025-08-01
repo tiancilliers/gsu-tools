@@ -41,6 +41,8 @@ def update_and_emit_status():
     }
     status['efuse'] = efuse_state
     status['reg'] = reg_state
+    status['telen'] = status.get('TEL_ENABLE', False)
+    status['telav'] = status.get('TEL_AVAIL', False)
     socketio.emit('status', status)
 
 def poll_status():
@@ -85,6 +87,8 @@ def action():
             eps_uc.write_regs(gsumicro.EPSReg.REG_3V3_STATE, [0x00 if status.get("3V3", {}).get("state") else 0x01])
         elif btn == "cmd_led":
             eps_uc.write_regs(gsumicro.EPSReg.REG_LED_STATE, [0x01])
+        elif btn == "cmd_tel":
+            eps_uc.write_regs(0x2F, [0x00 if status.get("TEL_ENABLE") else 0x01])
     return jsonify(success=True)
 
 @socketio.on('connect')

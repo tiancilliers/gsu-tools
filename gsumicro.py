@@ -233,9 +233,7 @@ class EPSMicro(GSUMicro):
             "RAW": {
                 "voltage": 0.004*bytes_read_int16_2s(data[EPSReg.REG_RAW_V.value], data[EPSReg.REG_RAW_V.value+1]),
                 "current": 0.0005*bytes_read_int16_2s(data[EPSReg.REG_RAW_I.value], data[EPSReg.REG_RAW_I.value+1])
-            }#,
-            #"BOOTL": {
-            #    "req": data[0x30],
-            #    "ack": data[0x31]
-            #}
+            },
+            "TEL_AVAIL": data[0x2E] != 0x00,
+            "TEL_ENABLE": data[0x2F] != 0x00
         }
