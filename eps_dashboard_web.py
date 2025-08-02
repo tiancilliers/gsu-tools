@@ -6,6 +6,8 @@ import gsuconfig
 import smbus
 import gsumicro
 import spidev
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -22,15 +24,32 @@ eps_uc = gsumicro.EPSMicro(spi_bus)
 
 time.sleep(0.1)
 
-eps_uc.write_regs(0x2F, [0x01])
+status = {}
+eps_uc_lock = threading.Lock()
+telemetry_log_file = None
+global_time_counter = 0
+
+def start_new_telemetry_log():
+    global telemetry_log_file, global_time_counter
+    # Ensure logs directory exists
+    os.makedirs('logs', exist_ok=True)
+    # Filename with current time
+    fname = datetime.now().strftime('logs/%Y%m%d_%H%M%S.csv')
+    telemetry_log_file = open(fname, 'w', encoding='utf-8')
+    # Write CSV header
+    header = ['time_ms', 'pressure', 'temperature', 'power'] + [f'valve{i}' for i in range(16)]
+    telemetry_log_file.write(','.join(header) + '\n')
+    telemetry_log_file.flush()
+    global_time_counter = 0
+    # Reset logging on hardware
+    eps_uc.write_regs(0x2F, [0x01])
+
+start_new_telemetry_log()
 
 time.sleep(0.1)
 
-status = {}
-eps_uc_lock = threading.Lock()
-
 def update_and_emit_status():
-    global status
+    global status, telemetry_log_file, global_time_counter
     with eps_uc_lock:
         status = eps_uc.get_stats()
     # Add EF and REG state info for toggles
@@ -47,6 +66,14 @@ def update_and_emit_status():
     status['reg'] = reg_state
     status['telav'] = status.get('TEL_AVAIL', False)
     status['telemetry'] = status.get('TELEMETRY', [])
+    # --- Telemetry logging ---
+    if telemetry_log_file and status['telemetry']:
+        for entry in status['telemetry']:
+            # entry: [pressure, temperature, power, [valve0..valve15]]
+            row = [str(global_time_counter), str(entry[0]), str(entry[1]), str(entry[2])] + [str(v) for v in entry[3]]
+            telemetry_log_file.write(','.join(row) + '\n')
+            global_time_counter += 5
+        telemetry_log_file.flush()
     socketio.emit('status', status)
 
 def poll_status():
@@ -91,6 +118,21 @@ def action():
             eps_uc.write_regs(gsumicro.EPSReg.REG_3V3_STATE, [0x00 if status.get("3V3", {}).get("state") else 0x01])
         elif btn == "cmd_led":
             eps_uc.write_regs(gsumicro.EPSReg.REG_LED_STATE, [0x01])
+        elif btn == "cmd_reset_logging":
+            start_new_telemetry_log()
+        elif btn == "dis_pl1":
+            eps_uc.write_regs(0x28, [0x01])
+        elif btn == "en_pl1":
+            eps_uc.write_regs(0x29, [0x01])
+        elif btn == "dis_pl2":
+            eps_uc.write_regs(0x2A, [0x01])
+        elif btn == "en_pl2":
+            eps_uc.write_regs(0x2B, [0x01])
+        elif btn == "dis_seq":
+            eps_uc.write_regs(0x2C, [0x01])
+        elif btn == "en_seq":
+            eps_uc.write_regs(0x2D, [0x01])
+
     return jsonify(success=True)
 
 @socketio.on('connect')

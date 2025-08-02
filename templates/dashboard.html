@@ -15,6 +15,9 @@
       <div class="border border-indigo-200 rounded-xl bg-white shadow p-0">
         <div class="font-bold text-indigo-700 text-lg px-6 pt-4 pb-2">Log</div>
         <div id="log" class="text-xs text-gray-700 px-6 pb-4 h-32 overflow-y-auto font-mono whitespace-pre-line"></div>
+        <div class="flex items-center justify-center px-6 pb-4 text-gray-700">
+          <button id="reset_logging" class="bg-indigo-500 text-white text-xs px-3 py-1 rounded hover:bg-indigo-600 transition-colors">RESET LOGGING</button>
+        </div>
       </div>
     </div>
     <div class="mb-4">
@@ -73,8 +76,8 @@
           <canvas id="chart3v3" height="60"></canvas>
         </div>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow border border-blue-200">
-        <h2 class="font-bold mb-2 text-blue-700 text-lg">5V Supply</h2>
+      <div class="bg-white p-6 rounded-xl shadow border border-indigo-200">
+        <h2 class="font-bold mb-2 text-indigo-700 text-lg">5V Supply</h2>
         <div class="grid grid-cols-2 gap-x-5 gap-y-1 text-gray-700 mb-2">
           <div class="flex items-center">
             <span class="mr-2 text-xs">REGULATOR</span><div class="flex-1 h-2 rounded transition-all"></div>
@@ -108,10 +111,28 @@
         </div>
       </div>
     </div>
+    <div class="mb-4">
+      <div class="bg-white p-6 rounded-xl shadow border border-indigo-200">
+      <h2 class="font-bold text-indigo-700 text-lg pb-2">Thruster Module Commands</h2>
+      <div class="flex justify-center gap-5 text-gray-700 mb-2">
+        <button id="dis_pl1" class="bg-indigo-500 text-white text-xs px-3 py-1 rounded hover:bg-indigo-600 transition-colors">DISABLE PLENUM CHANNEL 1</button>
+        <button id="en_pl1" class="bg-indigo-500 text-white text-xs px-3 py-1 rounded hover:bg-indigo-600 transition-colors">ENABLE PLENUM CHANNEL 1</button>
+      </div>
+      <div class="flex justify-center gap-5 text-gray-700 mb-2">
+        <button id="dis_pl2" class="bg-indigo-500 text-white text-xs px-3 py-1 rounded hover:bg-indigo-600 transition-colors">DISABLE PLENUM CHANNEL 2</button>
+        <button id="en_pl2" class="bg-indigo-500 text-white text-xs px-3 py-1 rounded hover:bg-indigo-600 transition-colors">ENABLE PLENUM CHANNEL 2</button>
+      </div>
+      <div class="flex justify-center gap-5 text-gray-700 mb-2">
+        <button id="dis_seq" class="bg-indigo-500 text-white text-xs px-3 py-1 rounded hover:bg-indigo-600 transition-colors">DISABLE THRUSTER SEQUENCE</button>
+        <button id="en_seq" class="bg-indigo-500 text-white text-xs px-3 py-1 rounded hover:bg-indigo-600 transition-colors">ENABLE THRUSTER SEQUENCE</button>
+      </div>
+      </div>
+    </div>
+
     <!-- Telemetry Panel -->
     <div class="mb-4">
-      <div class="bg-white p-6 rounded-xl shadow border border-blue-200">
-        <h2 class="font-bold mb-2 text-blue-700 text-lg">Telemetry</h2>
+      <div class="bg-white p-6 rounded-xl shadow border border-indigo-200">
+        <h2 class="font-bold text-indigo-700 text-lg pb-2">Telemetry</h2>
         <div class="grid grid-cols-2 gap-x-5 gap-y-1 text-gray-700 mb-2">
           <div class="flex items-center">
             <span class="mr-2 text-xs">PRESSURE</span><div class="flex-1 h-2 rounded transition-all"></div>
@@ -298,6 +319,27 @@
     });
     document.getElementById('toggle_raw').addEventListener('change', function() {
       sendToggle('cfg_raw');
+    });
+    document.getElementById('reset_logging').addEventListener('click', function() {
+      sendToggle('cmd_reset_logging');
+    });
+    document.getElementById('en_pl1').addEventListener('click', function() {
+      sendToggle('en_pl1');
+    });
+    document.getElementById('dis_pl1').addEventListener('click', function() {
+      sendToggle('dis_pl1');
+    });
+    document.getElementById('en_pl2').addEventListener('click', function() {
+      sendToggle('en_pl2');
+    });
+    document.getElementById('dis_pl2').addEventListener('click', function() {
+      sendToggle('dis_pl2');
+    });
+    document.getElementById('en_seq').addEventListener('click', function() {
+      sendToggle('en_seq');
+    });
+    document.getElementById('dis_seq').addEventListener('click', function() {
+      sendToggle('dis_seq');
     });
     // SocketIO status and log
     const socket = io();
